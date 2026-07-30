@@ -46,6 +46,7 @@ from pyccel.ast.core import (
     AliasAssign,
     AsName,
     Assign,
+    ClassDef,
     CodeBlock,
     ConstructorCall,
     Deallocate,
@@ -60,6 +61,7 @@ from pyccel.ast.core import (
     If,
     IfSection,
     Import,
+    Interface,
     Module,
     PyccelFunctionDef,
     SeparatorComment,
@@ -3077,17 +3079,39 @@ class FCodePrinter(CodePrinter):
         self.set_scope(expr.scope)
 
         name = self._print(expr.name)
-        base = None  # TODO: add base in ClassDef
+        superclasses = expr.superclasses
+        subclasses = expr.get_direct_user_nodes(lambda u: isinstance(u, ClassDef))
 
         decs = "".join(self._print(Declare(i)) for i in expr.attributes)
 
-        aliases = []
         names = []
-        methods = "".join(
-            f"procedure :: {method.name} => {method.cls_name}\n"
-            for method in expr.methods
-            if method.is_semantic
-        )
+        methods = ""
+        for method in expr.methods:
+            overrides = [
+                s.get_method(semantic_name=method.name)
+                for s in chain(superclasses, subclasses)
+            ]
+            overrides = [m for m in overrides if m]
+            arg_types = {
+                tuple(
+                    (
+                        (
+                            *(a_arg.var.class_type for a_arg in a.var.arguments),
+                            a.var.results.var.class_type,
+                        )
+                        if isinstance(a.var, FunctionAddress)
+                        else a.var.class_type
+                    )
+                    for a in f.arguments[1:]
+                )
+                for f in chain((method,), overrides)
+            }
+            if len(arg_types) == 1 and not method.is_virtual:
+                methods += f"procedure :: {method.name} => {method.cls_name}\n"
+            else:
+                methods += f"procedure :: {method.cls_name}\n"
+                methods += f"generic :: {method.name} => {method.cls_name}\n"
+
         for i in expr.interfaces:
             names = ",".join(f.cls_name for f in i.functions if f.is_semantic)
             if names:
@@ -3097,8 +3121,9 @@ class FCodePrinter(CodePrinter):
         self.exit_scope()
 
         sig = "type"
-        if not (base is None):
-            sig = "{0}, extends({1})".format(sig, base)
+        if superclasses:
+            base = ", ".join(self._print(c.class_type) for c in superclasses)
+            sig = f"{sig}, extends({base})"
 
         docstring = self._print(expr.docstring) if expr.docstring else ""
         code = f"{sig} :: {name}\n{decs}\n"
@@ -4286,15 +4311,27 @@ class FCodePrinter(CodePrinter):
 
         if func.arguments and func.arguments[0].bound_argument:
             class_variable = args[0].value
-            args = args[1:]
             if isinstance(class_variable, FunctionCall):
+                args = args[1:]
                 base = class_variable.funcdef.results.var
                 var = self.scope.get_temporary_variable(base)
 
                 self._additional_code += self._print(Assign(var, class_variable)) + "\n"
                 f_name = f"{self._print(var)} % {f_name}"
             else:
-                f_name = f"{self._print(class_variable)} % {f_name}"
+                interface = func.get_direct_user_nodes(
+                    lambda c: isinstance(c, Interface)
+                )
+                obj_in_class = interface[0] if interface else func
+                (enclosing_class,) = obj_in_class.get_direct_user_nodes(
+                    lambda c: isinstance(c, ClassDef)
+                )
+                possible_ambiguity = enclosing_class.get_method(semantic_name=func.name)
+                if possible_ambiguity and possible_ambiguity is not func:
+                    f_name = f"{func.cls_name}"
+                else:
+                    args = args[1:]
+                    f_name = f"{self._print(class_variable)} % {f_name}"
 
         if parent_assign:
             lhs = parent_assign[0].lhs

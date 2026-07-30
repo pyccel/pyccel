@@ -1,4 +1,4 @@
-# Couldn't find class NonExistentSuperClass in scope
+# Please check that your code executes correctly
 # pylint: disable=missing-function-docstring, missing-module-docstring, missing-class-docstring
 
 

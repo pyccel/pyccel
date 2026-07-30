@@ -73,6 +73,12 @@ class Scope:
         Indicates whether variables are allowed to be defined local to a loop scope.
         This is forbidden in Python and Fortran, but can be useful for temporary
         variables added for other languages.
+
+    parent_scope_symbol_prefix : str, optional
+        The prefix that is used to designate the parent scope. By default this is
+        taken from the parent scope, however occasionally a difference is required
+        (e.g. for class member functions whose enclosing parent scope is the module
+        but whose name should be associated with the class).
     """
 
     __slots__ = (
@@ -117,6 +123,7 @@ class Scope:
         scope_type,
         name_clash_checker,
         allow_loop_scoping=False,
+        parent_scope_symbol_prefix=None,
     ):
 
         assert (name is None) != (not is_loop)
@@ -131,7 +138,9 @@ class Scope:
         self._locals = {k: {} for k in self.categories}
 
         prefix_set = ()
-        if parent_scope and parent_scope.symbol_prefix:
+        if parent_scope_symbol_prefix:
+            prefix_set += (parent_scope_symbol_prefix.removesuffix("__"),)
+        elif parent_scope and parent_scope.symbol_prefix:
             prefix_set += (parent_scope.symbol_prefix.removesuffix("__"),)
         if name:
             prefix_set += (name,)
@@ -210,6 +219,15 @@ class Scope:
         The name of the scope.
         """
         return self._name
+
+    @property
+    def scope_type(self):
+        """
+        The type of the scope.
+
+        The type of the scope [module, function, class, loop, program].
+        """
+        return self._scope_type
 
     @property
     def symbol_prefix(self):
@@ -537,6 +555,15 @@ class Scope:
             )
         assert name in self._used_symbols
         self._locals["classes"][name] = cls
+
+    def clear_classes(self):
+        """
+        Remove all classes from the scope.
+
+        Remove all classes from the scope. This is necessary to remove syntactic classes
+        before starting the semantic treatment.
+        """
+        self._locals["classes"] = {}
 
     def insert_cls_construct(self, class_type):
         """

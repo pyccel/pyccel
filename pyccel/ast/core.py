@@ -2274,6 +2274,9 @@ class FunctionDef(ScopedAstNode):
     is_imported : bool, default : False
         True for a function that is imported.
 
+    is_virtual : bool, default : False
+        True for a class function which is not marked as final.
+
     functions : list, tuple
         A list of functions defined within this function.
 
@@ -2347,6 +2350,7 @@ class FunctionDef(ScopedAstNode):
         "_result_pointer_map",
         "_is_imported",
         "_is_semantic",
+        "_is_virtual",
     )
 
     _attribute_nodes = (
@@ -2379,6 +2383,7 @@ class FunctionDef(ScopedAstNode):
         is_header=False,
         is_external=False,
         is_imported=False,
+        is_virtual=False,
         functions=(),
         interfaces=(),
         result_pointer_map={},
@@ -2476,6 +2481,7 @@ class FunctionDef(ScopedAstNode):
         self._is_header = is_header
         self._is_external = is_external
         self._is_imported = is_imported
+        self._is_virtual = is_virtual
         self._functions = functions
         self._interfaces = interfaces
         self._result_pointer_map = result_pointer_map
@@ -2651,6 +2657,15 @@ class FunctionDef(ScopedAstNode):
         Indicates if the function was imported from another file.
         """
         return self._is_imported
+
+    @property
+    def is_virtual(self):
+        """
+        Indicates whether the function may point to a function in a sub-class.
+
+        Indicates whether the function may point to a function in a sub-class.
+        """
+        return self._is_virtual
 
     @property
     def is_inline(self):
@@ -3469,6 +3484,7 @@ class ClassDef(ScopedAstNode):
         "_imports",
         "_interfaces",
         "_docstring",
+        "_superclasses",
     )
 
     def __init__(
@@ -3612,29 +3628,6 @@ class ClassDef(ScopedAstNode):
         """
         return self._decorators
 
-    @property
-    def methods_as_dict(self):
-        """
-        A dictionary containing all methods with Python names as keys.
-
-        A dictionary containing all the methods in the class. The keys are the original
-        Python names of the methods. The values are the methods themselves.
-        """
-        return {
-            self._scope.get_python_name(m.name) if m.is_semantic else m.name: m
-            for m in self.methods
-        }
-
-    @property
-    def attributes_as_dict(self):
-        """Returns a dictionary that contains all attributes, where the key is the
-        attribute's name."""
-
-        d_attributes = {}
-        for i in self.attributes:
-            d_attributes[i.name] = i
-        return d_attributes
-
     def add_new_attribute(self, attr):
         """
         Add a new attribute to the current class.
@@ -3758,7 +3751,9 @@ class ClassDef(ScopedAstNode):
             if m is not syntactic_interface and m.name != semantic_interface.name
         ) + (semantic_interface,)
 
-    def get_method(self, name, raise_error_from=None):
+    def get_method(
+        self, *, syntactic_name=None, semantic_name=None, raise_error_from=None
+    ):
         """
         Get the method `name` of the current class.
 
@@ -3769,8 +3764,15 @@ class ClassDef(ScopedAstNode):
 
         Parameters
         ----------
-        name : str
+        syntactic_name : str, optional
             The name of the attribute we are looking for.
+            This is the name that appears in the Python code.
+            Either a syntactic_name or a semantic_name must be provided.
+
+        semantic_name : str, optional
+            The name of the attribute we are looking for.
+            This is the name that appears in the translated code.
+            Either a syntactic_name or a semantic_name must be provided.
 
         raise_error_from : PyccelAstNode, optional
             If an error should be raised then this variable should contain
@@ -3787,49 +3789,55 @@ class ClassDef(ScopedAstNode):
         ValueError
             Raised if the method cannot be found.
         """
-        method = next(
-            (
-                i
-                for i in chain(self.methods, self.interfaces)
-                if i.name == name and i.pyccel_staging == "syntactic"
-            ),
-            None,
-        )
-        if method:
-            return method
-
-        if self.scope is not None:
-            # Collect translated name from scope
-            try:
-                name = self.scope.get_expected_name(name)
-            except RuntimeError:
-                if raise_error_from:
-                    errors.report(
-                        f"Can't find method {name} in class {self.name}",
-                        severity="fatal",
-                        symbol=raise_error_from,
-                    )
-                else:
-                    return None
-
-        try:
+        assert (syntactic_name is not None) != (semantic_name is not None)
+        method = None
+        if syntactic_name:
             method = next(
-                i for i in chain(self.methods, self.interfaces) if i.name == name
+                (
+                    i
+                    for i in chain(self.methods, self.interfaces)
+                    if i.name == syntactic_name and i.pyccel_staging == "syntactic"
+                ),
+                None,
             )
-        except StopIteration:
-            method = None
-            i = 0
-            n_classes = len(self.superclasses)
-            while method is None and i < n_classes:
+            if method:
+                return method
+
+            if self.scope is not None:
+                # Collect translated name from scope
                 try:
-                    method = self.superclasses[i].get_method(name, raise_error_from)
-                except StopIteration:
-                    method = None
-                i += 1
+                    semantic_name = self.scope.get_expected_name(syntactic_name)
+                except RuntimeError:
+                    if raise_error_from:
+                        errors.report(
+                            f"Can't find method {syntactic_name} in class {self.name}",
+                            severity="fatal",
+                            symbol=raise_error_from,
+                        )
+                    else:
+                        return None
+            else:
+                # If there is no scope then this is a built-in class
+                semantic_name = syntactic_name
+
+        if semantic_name:
+            try:
+                method = next(
+                    i
+                    for i in chain(self.methods, self.interfaces)
+                    if i.name == semantic_name
+                )
+            except StopIteration:
+                for c in self.superclasses:
+                    method = c.get_method(semantic_name=semantic_name)
+                    if method is not None:
+                        break
 
         if method is None and raise_error_from:
+            if syntactic_name is None:
+                syntactic_name = self.scope.get_python_name(semantic_name)
             errors.report(
-                f"Can't find method {name} in class {self.name}",
+                f"Can't find method {syntactic_name} in class {self.name}",
                 severity="fatal",
                 symbol=raise_error_from,
             )

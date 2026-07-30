@@ -1102,8 +1102,7 @@ class SyntaxParser(BasicParser):
         #  TODO check all inputs and which ones should be treated in stage 1 or 2
 
         name = PyccelSymbol(stmt.name)
-        self.scope.insert_symbol(name, "function")
-        new_name = self.scope.get_expected_name(name)
+        new_name = self.scope.insert_symbol(name, "function")
 
         scope = self.create_new_function_scope(
             name, used_symbols={name: new_name}, original_symbols={new_name: name}
@@ -1251,7 +1250,23 @@ class SyntaxParser(BasicParser):
             tmp_var = d if isinstance(d, PyccelSymbol) else d.funcdef
             decorators.setdefault(tmp_var, []).append(d)
 
-        scope = self.create_new_class_scope(name)
+        parent_scope = self.scope
+
+        parent = [p for p in (self._visit(i) for i in stmt.bases) if p != "object"]
+        if len(parent) > 1:
+            errors.report(
+                "Multiple inheritance is not supported", severity="error", symbol=stmt
+            )
+
+        if parent:
+            superclass = self.scope.find(parent[0], "classes", raise_if_missing=True)
+            scope = self.create_new_class_scope(
+                name,
+                base_scope=superclass.scope,
+                parent_scope_symbol_prefix=parent_scope.symbol_prefix,
+            )
+        else:
+            scope = self.create_new_class_scope(name)
         methods = []
         attributes = []
         docstring = None
@@ -1276,7 +1291,6 @@ class SyntaxParser(BasicParser):
                     severity="error",
                     symbol=visited_i,
                 )
-        parent = [p for p in (self._visit(i) for i in stmt.bases) if p != "object"]
 
         init_method = next((m for m in methods if m.name == "__init__"), None)
         if init_method is None and not self.is_stub_file:
@@ -1296,18 +1310,26 @@ class SyntaxParser(BasicParser):
             )
             self_arg.set_current_ast(stmt)
             self.scope.insert_symbol(self_arg.var)
+            body = CodeBlock(())
+            if parent:
+                body.insert2body(
+                    DottedName(
+                        FunctionCall(PyccelSymbol("super"), ()),
+                        FunctionCall(PyccelSymbol("__init__"), ()),
+                    )
+                )
             self.exit_function_scope()
             methods.append(
                 FunctionDef(
                     init_name,
                     (self_arg,),
-                    CodeBlock(()),
+                    body,
                     FunctionDefResult(Nil()),
                     scope=init_scope,
                 )
             )
 
-        self.exit_class_scope()
+        self.scope = parent_scope
 
         expr = ClassDef(
             name=name,
@@ -1318,6 +1340,8 @@ class SyntaxParser(BasicParser):
             docstring=docstring,
             decorators=decorators,
         )
+
+        self.scope.insert_class(expr)
 
         return expr
 

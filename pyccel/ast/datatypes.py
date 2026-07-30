@@ -1351,7 +1351,7 @@ class DictType(ContainerType):
 # ==============================================================================
 
 
-def DataTypeFactory(ll_name, python_name, argnames=(), *, BaseClass=CustomDataType):
+def DataTypeFactory(ll_name, python_name, argnames=(), *, BaseClass=(CustomDataType,)):
     """
     Create a new data class.
 
@@ -1392,7 +1392,8 @@ def DataTypeFactory(ll_name, python_name, argnames=(), *, BaseClass=CustomDataTy
                 )
             setattr(self, key, value)
 
-        BaseClass.__init__(self)  # pylint: disable=unnecessary-dunder-call
+        for b in BaseClass:
+            b.__init__(self)  # pylint: disable=unnecessary-dunder-call
 
     assert iterable(argnames)
     assert all(isinstance(a, str) for a in argnames)
@@ -1416,7 +1417,7 @@ def DataTypeFactory(ll_name, python_name, argnames=(), *, BaseClass=CustomDataTy
 
     newclass = type(
         f"Pyccel{python_name}",
-        (BaseClass,),
+        BaseClass,
         {
             "__init__": class_init_func,
             "name": property(class_name_func),

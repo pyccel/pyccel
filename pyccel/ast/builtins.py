@@ -89,6 +89,7 @@ __all__ = (
     "PythonSetFunction",
     "PythonStr",
     "PythonSum",
+    "PythonSuper",
     "PythonTuple",
     "PythonTupleFunction",
     "PythonType",
@@ -1871,6 +1872,23 @@ class PythonStr(PyccelFunction):
 
 
 # ==============================================================================
+class PythonSuper(PyccelFunction):
+    """
+    A class to represent a call to `super()`.
+
+    A class to represent a call to `super()`. This class is entirely handled
+    in the semantic parser so the implementation is empty.
+
+    Parameters
+    ----------
+    *args : tuple[]
+        An empty tuple representing the arguments passed to `super()`.
+    """
+
+    __slots__ = ()
+
+
+# ==============================================================================
 
 DtypePrecisionToCastFunction = {
     PythonNativeBool(): PythonBool,
@@ -1901,6 +1919,7 @@ builtin_functions_dict = {
     "set": PythonSetFunction,
     "str": PythonStr,
     "sum": PythonSum,
+    "super": PythonSuper,
     "tuple": PythonTupleFunction,
     "type": PythonType,
     "zip": PythonZip,
