@@ -99,17 +99,16 @@ ComplexClass = ClassDef(
         PyccelFunctionDef(
             "imag",
             func_class=PythonImag,
-            decorators={"property": "property", "numpy_wrapper": "numpy_wrapper"},
+            decorators={"property": "property"},
         ),
         PyccelFunctionDef(
             "real",
             func_class=PythonReal,
-            decorators={"property": "property", "numpy_wrapper": "numpy_wrapper"},
+            decorators={"property": "property"},
         ),
         PyccelFunctionDef(
             "conjugate",
             func_class=PythonConjugate,
-            decorators={"numpy_wrapper": "numpy_wrapper"},
         ),
     ],
 )
@@ -123,17 +122,16 @@ FloatClass = ClassDef(
         PyccelFunctionDef(
             "imag",
             func_class=PythonImag,
-            decorators={"property": "property", "numpy_wrapper": "numpy_wrapper"},
+            decorators={"property": "property"},
         ),
         PyccelFunctionDef(
             "real",
             func_class=PythonReal,
-            decorators={"property": "property", "numpy_wrapper": "numpy_wrapper"},
+            decorators={"property": "property"},
         ),
         PyccelFunctionDef(
             "conjugate",
             func_class=PythonConjugate,
-            decorators={"numpy_wrapper": "numpy_wrapper"},
         ),
         # as_integer_ratio
         # fromhex
@@ -151,17 +149,16 @@ IntegerClass = ClassDef(
         PyccelFunctionDef(
             "imag",
             func_class=PythonImag,
-            decorators={"property": "property", "numpy_wrapper": "numpy_wrapper"},
+            decorators={"property": "property"},
         ),
         PyccelFunctionDef(
             "real",
             func_class=PythonReal,
-            decorators={"property": "property", "numpy_wrapper": "numpy_wrapper"},
+            decorators={"property": "property"},
         ),
         PyccelFunctionDef(
             "conjugate",
             func_class=PythonConjugate,
-            decorators={"numpy_wrapper": "numpy_wrapper"},
         ),
         # as_integer_ratio
         # bit_length
@@ -312,62 +309,58 @@ NumpyArrayClass = ClassDef(
         PyccelFunctionDef(
             "shape",
             func_class=NumpyShape,
-            decorators={"property": "property", "numpy_wrapper": "numpy_wrapper"},
+            decorators={"property": "property"},
         ),
         PyccelFunctionDef(
             "size",
             func_class=NumpySize,
-            decorators={"property": "property", "numpy_wrapper": "numpy_wrapper"},
+            decorators={"property": "property"},
         ),
         PyccelFunctionDef(
             "T",
             func_class=NumpyTranspose,
-            decorators={"property": "property", "numpy_wrapper": "numpy_wrapper"},
+            decorators={"property": "property"},
         ),
         PyccelFunctionDef(
             "transpose",
             func_class=NumpyTranspose,
-            decorators={"numpy_wrapper": "numpy_wrapper"},
         ),
         PyccelFunctionDef(
-            "sum", func_class=NumpySum, decorators={"numpy_wrapper": "numpy_wrapper"}
+            "sum", func_class=NumpySum
         ),
         PyccelFunctionDef(
-            "min", func_class=NumpyAmin, decorators={"numpy_wrapper": "numpy_wrapper"}
+            "min", func_class=NumpyAmin
         ),
         PyccelFunctionDef(
-            "max", func_class=NumpyAmax, decorators={"numpy_wrapper": "numpy_wrapper"}
+            "max", func_class=NumpyAmax
         ),
         PyccelFunctionDef(
             "imag",
             func_class=NumpyImag,
-            decorators={"property": "property", "numpy_wrapper": "numpy_wrapper"},
+            decorators={"property": "property"},
         ),
         PyccelFunctionDef(
             "real",
             func_class=NumpyReal,
-            decorators={"property": "property", "numpy_wrapper": "numpy_wrapper"},
+            decorators={"property": "property"},
         ),
         PyccelFunctionDef(
             "conj",
             func_class=NumpyConjugate,
-            decorators={"numpy_wrapper": "numpy_wrapper"},
         ),
         PyccelFunctionDef(
             "conjugate",
             func_class=NumpyConjugate,
-            decorators={"numpy_wrapper": "numpy_wrapper"},
         ),
         PyccelFunctionDef(
             "dtype",
             func_class=NumpyResultType,
-            decorators={"property": "property", "numpy_wrapper": "numpy_wrapper"},
+            decorators={"property": "property"},
         ),
         PyccelFunctionDef(
             "copy",
             func_class=NumpyArray,
             argument_description={"self": None, "order": "C"},
-            decorators={"numpy_wrapper": "numpy_wrapper"},
         ),
     ],
 )
