@@ -415,30 +415,20 @@ class PythonCodePrinter(CodePrinter):
         if len(decorators) == 0:
             return ""
         dec = ""
-        for name, f in decorators.items():
-            if name in pyccel_decorators:
-                self.add_import(
-                    Import(
-                        DottedName("pyccel.decorators"),
-                        [AsName(decorators_mod[name], name)],
-                    )
-                )
-            # TODO - All decorators must be stored in a list
-            if not isinstance(f, list):
-                f = [f]
-            for func in f:
-                if isinstance(func, FunctionCall):
-                    args = ", ".join(self._print(a) for a in func.args)
-                elif func == name:
-                    args = ""
-                else:
-                    args = ", ".join(self._print(LiteralString(a)) for a in func)
+        for func in decorators:
+            name = func.name
+            if isinstance(func, FunctionCall):
+                args = ", ".join(self._print(a) for a in func.args)
+            elif isinstance(func, PyccelFunctionDef):
+                args = ""
+            else:
+                args = ", ".join(self._print(LiteralString(a)) for a in func)
 
-                if args:
-                    dec += f"@{name}({args})\n"
+            if args:
+                dec += f"@{name}({args})\n"
 
-                else:
-                    dec += f"@{name}\n"
+            else:
+                dec += f"@{name}\n"
         return dec
 
     def _get_type_var_declarations(self):
