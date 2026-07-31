@@ -60,6 +60,7 @@ from .datatypes import (
     SymbolicType,
     TupleType,
 )
+from .decorators import PythonProperty
 from .numpyext import (
     NumpyAmax,
     NumpyAmin,
@@ -99,12 +100,12 @@ ComplexClass = ClassDef(
         PyccelFunctionDef(
             "imag",
             func_class=PythonImag,
-            decorators={"property": "property"},
+            decorators=[PythonProperty],
         ),
         PyccelFunctionDef(
             "real",
             func_class=PythonReal,
-            decorators={"property": "property"},
+            decorators=[PythonProperty],
         ),
         PyccelFunctionDef(
             "conjugate",
@@ -122,12 +123,12 @@ FloatClass = ClassDef(
         PyccelFunctionDef(
             "imag",
             func_class=PythonImag,
-            decorators={"property": "property"},
+            decorators=[PythonProperty],
         ),
         PyccelFunctionDef(
             "real",
             func_class=PythonReal,
-            decorators={"property": "property"},
+            decorators=[PythonProperty],
         ),
         PyccelFunctionDef(
             "conjugate",
@@ -149,12 +150,12 @@ IntegerClass = ClassDef(
         PyccelFunctionDef(
             "imag",
             func_class=PythonImag,
-            decorators={"property": "property"},
+            decorators=[PythonProperty],
         ),
         PyccelFunctionDef(
             "real",
             func_class=PythonReal,
-            decorators={"property": "property"},
+            decorators=[PythonProperty],
         ),
         PyccelFunctionDef(
             "conjugate",
@@ -309,17 +310,17 @@ NumpyArrayClass = ClassDef(
         PyccelFunctionDef(
             "shape",
             func_class=NumpyShape,
-            decorators={"property": "property"},
+            decorators=[PythonProperty],
         ),
         PyccelFunctionDef(
             "size",
             func_class=NumpySize,
-            decorators={"property": "property"},
+            decorators=[PythonProperty],
         ),
         PyccelFunctionDef(
             "T",
             func_class=NumpyTranspose,
-            decorators={"property": "property"},
+            decorators=[PythonProperty],
         ),
         PyccelFunctionDef(
             "transpose",
@@ -337,12 +338,12 @@ NumpyArrayClass = ClassDef(
         PyccelFunctionDef(
             "imag",
             func_class=NumpyImag,
-            decorators={"property": "property"},
+            decorators=[PythonProperty],
         ),
         PyccelFunctionDef(
             "real",
             func_class=NumpyReal,
-            decorators={"property": "property"},
+            decorators=[PythonProperty],
         ),
         PyccelFunctionDef(
             "conj",
@@ -355,7 +356,7 @@ NumpyArrayClass = ClassDef(
         PyccelFunctionDef(
             "dtype",
             func_class=NumpyResultType,
-            decorators={"property": "property"},
+            decorators=[PythonProperty],
         ),
         PyccelFunctionDef(
             "copy",
