@@ -2370,7 +2370,7 @@ class FunctionDef(ScopedAstNode):
         cls_name=None,
         is_static=False,
         imports=(),
-        decorators={},
+        decorators=(),
         headers=(),
         is_recursive=False,
         is_pure=False,
@@ -2439,8 +2439,7 @@ class FunctionDef(ScopedAstNode):
         if not iterable(imports):
             raise TypeError("imports must be an iterable")
 
-        if not isinstance(decorators, dict):
-            raise TypeError("decorators must be a dict")
+        assert iterable(decorators)
 
         if not isinstance(is_pure, bool):
             raise TypeError("Expecting a boolean for pure")
@@ -3003,7 +3002,7 @@ class PyccelFunctionDef(FunctionDef):
     __slots__ = ("_argument_description",)
     class_type = SymbolicType()
 
-    def __init__(self, name, func_class, *, decorators={}, argument_description={}):
+    def __init__(self, name, func_class, *, decorators=(), argument_description={}):
         assert isinstance(func_class, type) and issubclass(
             func_class, (PyccelFunction, TypedAstNode, Iterable)
         )

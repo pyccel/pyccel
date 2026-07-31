@@ -16,7 +16,6 @@ import sys
 from collections import namedtuple
 from itertools import chain
 
-import pyccel.decorators as pyccel_decorators
 from pyccel.errors.errors import Errors
 
 from .builtins import (
@@ -47,6 +46,7 @@ from .datatypes import (
     PythonNativeInt,
     StringType,
 )
+from .decorators import pyccel_decorator_funcs
 from .internals import PyccelArrayShapeElement, PyccelFunction, Slice
 from .itertoolsext import itertools_mod
 from .literals import LiteralEllipsis, LiteralInteger, Nil
@@ -88,7 +88,7 @@ __all__ = (
 decorators_mod = Module(
     "decorators",
     (),
-    funcs=[PyccelFunctionDef(d, PyccelFunction) for d in pyccel_decorators.__all__],
+    funcs=pyccel_decorator_funcs.values(),
 )
 pyccel_mod = Module("pyccel", (), (), imports=[Import("decorators", decorators_mod)])
 

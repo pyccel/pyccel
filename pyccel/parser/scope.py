@@ -40,8 +40,8 @@ class Scope:
     name : str, optional
         The name of the scope. The value needs to be provided when it is not a loop.
 
-    decorators : dict, default: ()
-        A dictionary of any decorators which operate on objects in this scope.
+    decorators : iterable, default: ()
+        An iterable of any decorators which operate on objects in this scope.
 
     is_loop : bool, default: False
         Indicates if the scope represents a loop (in Python variables declared
@@ -92,6 +92,7 @@ class Scope:
         "_scope_type",
         "_name_clash_checker",
         "_allow_loop_scoping",
+        "_decorators",
     )
 
     categories = (
@@ -100,7 +101,6 @@ class Scope:
         "classes",
         "imports",
         "symbolic_aliases",
-        "decorators",
         "cls_constructs",
     )
 
@@ -148,7 +148,7 @@ class Scope:
 
         self._dummy_counter = 0
 
-        self._locals["decorators"].update(decorators)
+        self._decorators = tuple(decorators)
         if symbolic_aliases:
             self._locals["symbolic_aliases"].update(symbolic_aliases)
 
@@ -267,7 +267,7 @@ class Scope:
         in this scope. The keys are the name of the decorator function. The values
         depend on the decorator.
         """
-        return immutabledict(self._locals["decorators"])
+        return self._decorators
 
     @property
     def cls_constructs(self):

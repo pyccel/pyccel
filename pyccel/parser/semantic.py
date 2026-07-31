@@ -135,6 +135,7 @@ from pyccel.ast.datatypes import (
     VoidType,
     original_type_to_pyccel_type,
 )
+from pyccel.ast.decorators import pyccel_decorator_funcs
 from pyccel.ast.functionalexpr import (
     FunctionalFor,
     FunctionalMax,
@@ -6409,7 +6410,7 @@ class SemanticParser(BasicParser):
             bound_class = self.scope.find(cls_name, "classes", raise_if_missing=True)
             insertion_scope = bound_class.scope
 
-        decorators = expr.decorators.copy()
+        decorators = [self._visit(d) for d in expr.decorators]
 
         existing_semantic_funcs = []
         assert not expr.is_semantic
@@ -6424,12 +6425,12 @@ class SemanticParser(BasicParser):
                 else:
                     return EmptyNode()
             insertion_scope.remove_function(python_name)
-        if "low_level" in decorators or (
+        if pyccel_decorator_funcs["low_level"] in decorators or (
             self.is_stub_file
             and not python_name.startswith("__")
             and not expr.is_inline
         ):
-            if "low_level" in decorators:
+            if pyccel_decorator_funcs["low_level"] in decorators:
                 low_level_decs = decorators["low_level"]
                 assert len(low_level_decs) == 1
                 arg = low_level_decs[0].args[0].value
@@ -6447,18 +6448,8 @@ class SemanticParser(BasicParser):
         sub_funcs = []
         func_interfaces = []
         docstring = self._visit(expr.docstring) if expr.docstring else expr.docstring
-        is_pure = expr.is_pure
-        is_elemental = expr.is_elemental
-
-        not_used = [
-            d
-            for d in decorators
-            if d not in (*def_decorators.__all__, "property", "overload")
-        ]
-        if len(not_used) >= 1:
-            errors.report(
-                UNUSED_DECORATORS, symbol=", ".join(not_used), severity="warning"
-            )
+        is_pure = pyccel_decorator_funcs['pure'] in decorators
+        is_elemental = pyccel_decorator_funcs['elemental'] in decorators
 
         available_type_vars = {
             n: v for n, v in self._context_dict.items() if isinstance(v, typing.TypeVar)

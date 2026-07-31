@@ -1117,43 +1117,7 @@ class SyntaxParser(BasicParser):
         is_inline = False
         docstring = None
 
-        decorators = {}
-
-        for d in self._visit(stmt.decorator_list):
-            tmp_var = d if isinstance(d, PyccelSymbol) else d.funcdef
-            if tmp_var in decorators:
-                decorators[tmp_var] += [d]
-            else:
-                decorators[tmp_var] = [d]
-
-        if "stack_array" in decorators:
-            decorators["stack_array"] = tuple(
-                str(b.value) for a in decorators["stack_array"] for b in a.args
-            )
-
-        if "allow_negative_index" in decorators:
-            decorators["allow_negative_index"] = tuple(
-                str(b.value) for a in decorators["allow_negative_index"] for b in a.args
-            )
-
-        if "pure" in decorators:
-            is_pure = True
-
-        if "elemental" in decorators:
-            is_elemental = True
-            if len(arguments) > 1:
-                errors.report(
-                    FORTRAN_ELEMENTAL_SINGLE_ARGUMENT,
-                    symbol=decorators["elemental"],
-                    bounding_box=(stmt.lineno, stmt.col_offset),
-                    severity="error",
-                )
-
-        if "private" in decorators:
-            is_private = True
-
-        if "inline" in decorators:
-            is_inline = True
+        decorators = self._visit(stmt.decorator_list)
 
         result_annotation = self._treat_type_annotation(stmt, self._visit(stmt.returns))
 
@@ -1221,9 +1185,6 @@ class SyntaxParser(BasicParser):
             arguments,
             body,
             results,
-            is_pure=is_pure,
-            is_elemental=is_elemental,
-            is_private=is_private,
             imports=imports,
             functions=functions,
             decorators=decorators,
@@ -1236,10 +1197,7 @@ class SyntaxParser(BasicParser):
     def _visit_ClassDef(self, stmt):
 
         name = stmt.name
-        decorators = {}
-        for d in self._visit(stmt.decorator_list):
-            tmp_var = d if isinstance(d, PyccelSymbol) else d.funcdef
-            decorators.setdefault(tmp_var, []).append(d)
+        decorators = self._visit(stmt.decorator_list)
 
         scope = self.create_new_class_scope(name)
         methods = []
