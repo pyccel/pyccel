@@ -174,15 +174,11 @@ def pyccel_test(*, folder, dry_run, verbose, language, run_mpi):
     os.chdir(test_dir)
 
     # Descriptions of the tests:
-    desc_1 = "Run the single-process tests which can be run in parallel... [language-agnostic]"
-    desc_2 = (
-        "Run the single-process tests which can be run in parallel... [language: C]"
-    )
-    desc_3 = "Run the single-process tests which can be run in parallel... [language: Fortran]"
-    desc_4 = (
-        "Run the single-process tests which can be run in parallel... [language: C++]"
-    )
-    desc_5 = "Run the single-process tests which can be run in parallel... [language: Python]"
+    desc_1 = "Run single-process tests... [language-agnostic]"
+    desc_2 = "Run single-process tests... [language: C]"
+    desc_3 = "Run single-process tests... [language: Fortran]"
+    desc_4 = "Run single-process tests... [language: C++]"
+    desc_5 = "Run single-process tests... [language: Python]"
     descriptions = [desc_1, desc_2, desc_3, desc_4, desc_5]
 
     # Commands to run the tests:
