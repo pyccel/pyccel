@@ -67,7 +67,7 @@ jobs:
         with:
           mpi_type: msmpi
           shell: gitbash
-      - name: Fortran/C tests with pytest
+      - name: Pytest serial tests
         if: steps.duplicate_check.outputs.should_skip != 'true'
         id: f_c_pytest
         timeout-minutes: 60
