@@ -12,6 +12,7 @@ All notable changes to this project will be documented in this file.
 -   #2611 : Add a plugin framework.
 -   #2611 : Add `pluggy` as an installation dependency.
 -   #2632 : Allow `\` to be used as a comment continuation character in OpenMP pragmas.
+-   #2635 : Allow `pyccel_clean` function to be called in combination with `pytest-xdist`.
 
 ### Fixed
 
@@ -21,6 +22,7 @@ All notable changes to this project will be documented in this file.
 -   #2618 : Fix unnecessary slicing returning the whole array.
 -   #2620 : Fix strange indenting in Fortran when a comment line begins with a dollar sign.
 -   #2629 : Fix race condition due to class variables in `Scope`.
+-   #2635 : Fix temporary folders not deleted after running Pyccel tests with `pytest-xdist`.
 
 ### Changed
 
@@ -43,7 +45,8 @@ All notable changes to this project will be documented in this file.
 -   #2522 : Remove command-line tools: `pyccel-clean`, `pyccel-test`, `pyccel-wrap` in favour of sub-commands of the `pyccel` tool.
 -   \[DEVELOPER\] Remove unused method `FCodePrinter.set_current_class` and the associated property.
 -   \[DEVELOPER\] Remove unused methods `FCodePrinter.get_method` and `FCodePrinter.get_function`.
--   \[DEVELOPER\] Removed unhelpful class `pyccel.parser.extend_tree.CommentMultiLine`.
+-   \[DEVELOPER\] Remove unhelpful class `pyccel.parser.extend_tree.CommentMultiLine`.
+-   \[DEVELOPER\] Remove `xdist_incompatible` `pytest` marker.
 
 ## \[2.2.3\] - 2026-03-20
 

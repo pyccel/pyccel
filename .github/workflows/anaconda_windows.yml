@@ -67,18 +67,11 @@ jobs:
         with:
           mpi_type: msmpi
           shell: gitbash
-      - name: Fortran/C tests with pytest
+      - name: Pytest serial tests
         if: steps.duplicate_check.outputs.should_skip != 'true'
-        id: f_c_pytest
+        id: serial_pytest
         timeout-minutes: 60
         uses: ./.github/actions/pytest_run
         with:
           shell_cmd: 'gitbash -l -eo pipefail {0}'
-          pytest_mark: 'and not external'
-      - name: Python tests with pytest
-        if: steps.duplicate_check.outputs.should_skip != 'true'
-        id: python_pytest
-        timeout-minutes: 20
-        uses: ./.github/actions/pytest_run_python
-        with:
-          shell_cmd: 'gitbash -l -eo pipefail {0}'
+          pytest_flags: '-m "not external"'

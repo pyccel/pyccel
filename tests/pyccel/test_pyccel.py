@@ -7,11 +7,11 @@ import re
 import shutil
 import subprocess
 import sys
+from pathlib import Path
 
 import numpy as np
 import pluggy
 import pytest
-from filelock import FileLock
 
 from pyccel.ast.utilities import python_builtin_libs
 from pyccel.codegen.pipeline import execute_pyccel
@@ -21,72 +21,157 @@ from pyccel.compilers.default_compilers import available_compilers
 # UTILITIES
 # ==============================================================================
 
-# ------------------------------------------------------------------------------
-
-
-def get_abs_path(relative_path):
-    relative_path = os.path.normpath(relative_path)
-    base_dir = os.path.dirname(os.path.realpath(__file__))
-    return os.path.join(base_dir, relative_path)
+expected_extensions = {"fortran": ".f90", "c": ".c", "python": ".py"}
 
 
 # ------------------------------------------------------------------------------
-def get_exe(filename, language=None):
-    if language != "python":
-        exefile1 = os.path.splitext(filename)[0]
-    else:
-        exefile1 = filename
+def copy_to_isolated_dir(isolated_dir, rel_paths):
+    """
+    Copy files into an isolated directory, preserving their relative layout.
 
-    if sys.platform == "win32" and language != "python":
-        exefile1 += ".exe"
+    Copy each of `rel_paths` (relative to the folder containing this file)
+    into `isolated_dir`, preserving that same relative path, so files
+    belonging to the same test land next to each other and relative/package
+    imports between them keep working.
 
-    dirname = os.path.dirname(filename)
-    basename = os.path.basename(exefile1)
-    exefile2 = os.path.join(dirname, basename)
+    Parameters
+    ----------
+    isolated_dir : Path
+        The directory (exclusive to the current test) into which files
+        should be copied.
 
-    if os.path.isfile(exefile2):
-        return exefile2
-    else:
-        assert os.path.isfile(exefile1)
-        return exefile1
+    rel_paths : list[str | Path]
+        The paths of the files to copy, relative to the folder containing
+        this file.
 
+    Returns
+    -------
+    list[Path]
+        The absolute paths of the copies, inside `isolated_dir`, in the same
+        order as `rel_paths`.
+    """
+    base_path = Path(__file__).resolve().parent
+    new_abs_paths = []
+    for rel_path in rel_paths:
+        src = base_path / rel_path
+        dst = isolated_dir / rel_path
+        dst.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy(src, dst)
+        new_abs_paths.append(dst)
 
-# ------------------------------------------------------------------------------
-def insert_pyccel_folder(abs_path):
-    base_dir = os.path.dirname(abs_path)
-    base_name = os.path.basename(abs_path)
-    return os.path.join(
-        base_dir, "__pyccel__" + os.environ.get("PYTEST_XDIST_WORKER", ""), base_name
-    )
-
-
-# ------------------------------------------------------------------------------
-def get_python_output(abs_path, cwd=None):
-    with subprocess.Popen(
-        [sys.executable, abs_path],
-        stdout=subprocess.PIPE,
-        universal_newlines=True,
-        cwd=cwd,
-    ) as p:
-        out, _ = p.communicate()
-        assert p.returncode == 0
-    return out
+    return new_abs_paths
 
 
 # ------------------------------------------------------------------------------
 def compile_pyccel(path_dir, test_file, options=""):
+    """
+    Run `pyccel compile` on a file.
+
+    Run `pyccel compile` on a file with verbose output requested, so the
+    paths of the files pyccel generated, and the executable it produced
+    (for a full compile), can be recovered from stdout instead of having to
+    be guessed by the caller. See `get_module_name_from_verbose_output` and
+    `get_executable_name_from_verbose_output`.
+
+    Parameters
+    ----------
+    path_dir : str
+        The directory pyccel should be run from.
+
+    test_file : str
+        The file which should be compiled.
+
+    options : str
+        Any additional command-line options to pass to pyccel.
+
+    Returns
+    -------
+    str
+        The captured stdout of the `pyccel compile` command.
+    """
     if "python" in options and "--output" not in options:
         options += " --output=__pyccel__"
+    options += " -v"
     cmd = [shutil.which("pyccel"), "compile", test_file]
     if options != "":
         cmd += options.strip().split()
-    p = subprocess.Popen(cmd, universal_newlines=True, cwd=path_dir)
-    p.wait()
-    assert p.returncode == 0
+    p = subprocess.run(cmd, cwd=path_dir, text=True, capture_output=True, check=True)
+    return p.stdout
 
 
 # ------------------------------------------------------------------------------
-def compile_c(path_dir, test_file, dependencies, is_mod=False):
+def get_module_name_from_verbose_output(output, extension):
+    """
+    Get the path of the generated module file from a verbose pyccel output.
+
+    Parse the stdout of a translate-only, verbose (`-v`) `pyccel compile` run
+    (see `compile_pyccel`) and return the path of the generated module source
+    file with the given extension, i.e. the file pyccel printed that does not
+    have a `prog_` prefix. Header/stub files and, if present, the separate
+    program-driver file are ignored.
+
+    Parameters
+    ----------
+    output : str
+        The captured stdout of a translate-only, verbose `pyccel compile` run.
+
+    extension : str
+        The extension of the generated file to find (e.g. `.f90`/`.c`).
+
+    Returns
+    -------
+    Path
+        The path of the generated module file.
+    """
+    for line in output.splitlines():
+        if line.startswith(">>> Printing ::"):
+            path = Path(line.split("::", 1)[1].strip())
+            if path.suffix == extension and not path.name.startswith("prog_"):
+                return path
+    raise AssertionError(f"No generated {extension} file found in pyccel output")
+
+
+# ------------------------------------------------------------------------------
+def get_executable_name_from_verbose_output(output, language="fortran"):
+    """
+    Get the path of the language output from a verbose pyccel output.
+
+    Parse the stdout of a verbose (`-v`), full (non-translate-only) `pyccel
+    compile` run (see `compile_pyccel`) and return the path of the file that
+    should be run to obtain the program's output: the executable pyccel
+    produced, or, when translating to Python, the translated `.py` file
+    pyccel copied to its final (`--output`) location, since no executable is
+    produced in that case.
+
+    Parameters
+    ----------
+    output : str
+        The captured stdout of a verbose, full `pyccel compile` run.
+
+    language : str
+        The language pyccel translated to.
+
+    Returns
+    -------
+    Path
+        The path of the generated executable, or of the translated Python
+        file.
+    """
+    if language == "python":
+        for line in output.splitlines():
+            if line.startswith("cp "):
+                return Path(line.split()[-1])
+        raise AssertionError("No copied Python file found in pyccel output")
+    for line in output.splitlines():
+        if line.startswith(">> Compiling executable ::"):
+            return Path(line.split("::", 1)[1].strip())
+    raise AssertionError("No generated executable found in pyccel output")
+
+
+# ------------------------------------------------------------------------------
+def compile_c(
+    path_dir, test_file, generated_file, generated_dependencies, is_mod=False
+):
     """
     Compile C code manually.
 
@@ -98,13 +183,25 @@ def compile_c(path_dir, test_file, dependencies, is_mod=False):
         The path to the directory where the compilation command should be run from.
 
     test_file : str
-        The Python file which was translated.
+        The Python file which was translated. Used only to determine the
+        name/location of the output executable.
 
-    dependencies : list of str
-        A list of any Python dependencies of the file.
+    generated_file : Path
+        The path, in its final folder, of the C file generated by pyccel
+        from `test_file`.
+
+    generated_dependencies : list of Path
+        A list of the C files, in their final folders, generated by pyccel
+        from the Python dependencies of the file.
 
     is_mod : bool, default=False
         True if translating a module, False if translating a program
+
+    Returns
+    -------
+    Path or None
+        The path of the generated executable, or None if a module (rather
+        than a program) was compiled.
 
     See also
     --------
@@ -113,25 +210,31 @@ def compile_c(path_dir, test_file, dependencies, is_mod=False):
     compiler_family = os.environ.get("PYCCEL_DEFAULT_COMPILER", "GNU")
     compiler_info = available_compilers[compiler_family]["c"]
     compiler = compiler_info["exec"]
-    folder = os.path.join(os.path.dirname(test_file), "__pyccel__")
+    folder = generated_file.parent
     deps = []
-    subfolders = [f.path for f in os.scandir(folder) if f.is_dir()]
+    subfolders = [f for f in folder.iterdir() if f.is_dir()]
     for f in subfolders:
-        for fi in os.listdir(f):
-            root, ext = os.path.splitext(fi)
-            if ext == ".c":
-                deps.append(os.path.join(f, root) + ".py")
-                with subprocess.Popen(
-                    [compiler, "-c", fi, "-o", root + ".o"], text=True, cwd=f
-                ) as p:
-                    p.wait()
-    compile_fortran_or_c(
-        compiler_info, ".c", path_dir, test_file, dependencies, deps, is_mod
+        for fi in f.iterdir():
+            if fi.suffix == ".c":
+                deps.append(f / (fi.with_suffix(".py")))
+                subprocess.run(
+                    [compiler, "-c", fi.name, "-o", fi.stem + ".o"], cwd=f, check=True
+                )
+    return compile_fortran_or_c(
+        compiler_info,
+        path_dir,
+        test_file,
+        generated_file,
+        generated_dependencies,
+        deps,
+        is_mod,
     )
 
 
 # ------------------------------------------------------------------------------
-def compile_fortran(path_dir, test_file, dependencies, is_mod=False):
+def compile_fortran(
+    path_dir, test_file, generated_file, generated_dependencies, is_mod=False
+):
     """
     Compile Fortran code manually.
 
@@ -143,13 +246,25 @@ def compile_fortran(path_dir, test_file, dependencies, is_mod=False):
         The path to the directory where the compilation command should be run from.
 
     test_file : str
-        The Python file which was translated.
+        The Python file which was translated. Used only to determine the
+        name/location of the output executable.
 
-    dependencies : list of str
-        A list of any Python dependencies of the file.
+    generated_file : Path
+        The path, in its final folder, of the Fortran file generated by
+        pyccel from `test_file`.
+
+    generated_dependencies : list of Path
+        A list of the Fortran files, in their final folders, generated by
+        pyccel from the Python dependencies of the file.
 
     is_mod : bool, default=False
         True if translating a module, False if translating a program
+
+    Returns
+    -------
+    Path or None
+        The path of the generated executable, or None if a module (rather
+        than a program) was compiled.
 
     See also
     --------
@@ -157,14 +272,26 @@ def compile_fortran(path_dir, test_file, dependencies, is_mod=False):
     """
     compiler_family = os.environ.get("PYCCEL_DEFAULT_COMPILER", "GNU")
     compiler_info = available_compilers[compiler_family]["fortran"]
-    compile_fortran_or_c(
-        compiler_info, ".f90", path_dir, test_file, dependencies, (), is_mod
+    return compile_fortran_or_c(
+        compiler_info,
+        path_dir,
+        test_file,
+        generated_file,
+        generated_dependencies,
+        (),
+        is_mod,
     )
 
 
 # ------------------------------------------------------------------------------
 def compile_fortran_or_c(
-    compiler_info, extension, path_dir, test_file, dependencies, std_deps, is_mod=False
+    compiler_info,
+    path_dir,
+    test_file,
+    generated_file,
+    dependencies,
+    std_deps,
+    is_mod=False,
 ):
     """
     Compile Fortran or C code manually.
@@ -177,64 +304,72 @@ def compile_fortran_or_c(
     compiler_info : dict
         A dictionary describing the compiler properties.
 
-    extension : str
-        The extension of the generated file (.c/.f90).
-
     path_dir : str
         The path to the directory where the compilation command should be run from.
 
     test_file : str
-        The Python file which was translated.
+        The Python file which was translated. Used only to determine the
+        name/location of the output executable.
 
-    dependencies : list of str
-        A list of any Python dependencies of the file.
+    generated_file : Path
+        The path, in its final folder, of the Fortran/C file (already carrying
+        its .c/.f90 extension) generated by pyccel from `test_file`.
+
+    dependencies : list of Path
+        A list of the Fortran/C files (already carrying their .c/.f90
+        extension), in their final folders, generated by pyccel from the
+        Python dependencies of the file.
 
     std_deps : list of str
         A list of any language-specific dependencies of the file (e.g. ndarrays).
 
     is_mod : bool, default=False
         True if translating a module, False if translating a program
+
+    Returns
+    -------
+    Path or None
+        The path of the generated executable, or None if a module (rather
+        than a program) was compiled.
     """
     compiler = compiler_info["exec"]
-    root = insert_pyccel_folder(test_file)[:-3]
+    extension = generated_file.suffix
+    root = generated_file.with_suffix("")
 
-    assert os.path.isfile(root + extension)
+    assert generated_file.is_file()
 
-    deps = [dependencies] if isinstance(dependencies, str) else dependencies
-    base_dir = os.path.dirname(root)
+    deps = list(dependencies)
+    base_dir = root.parent
     if not is_mod:
-        base_name = os.path.basename(root)
-        prog_root = os.path.join(base_dir, "prog_" + base_name)
-        if os.path.isfile(prog_root + extension):
+        prog_root = base_dir / ("prog_" + root.name)
+        if prog_root.with_suffix(extension).is_file():
             compile_fortran_or_c(
                 compiler_info,
-                extension,
                 path_dir,
                 test_file,
+                generated_file,
                 dependencies,
                 std_deps,
                 is_mod=True,
             )
             root = prog_root
-            deps.append(test_file)
+            deps.append(generated_file)
 
     if is_mod:
-        command = [shutil.which(compiler), "-c", root + extension]
+        command = [shutil.which(compiler), "-c", str(root.with_suffix(extension))]
         for d in deps:
-            d = insert_pyccel_folder(d)
-            command.append("-I" + os.path.dirname(d))
+            command.append("-I" + str(d.parent))
         for d in std_deps:
-            command.append("-I" + os.path.dirname(d))
+            command.append("-I" + str(Path(d).parent))
     else:
-        command = [compiler, "-O3", root + extension]
+        command = [compiler, "-O3", str(root.with_suffix(extension))]
         for d in deps:
-            d = insert_pyccel_folder(d)
-            command.append(d[:-3] + ".o")
-            command.append("-I" + os.path.dirname(d))
+            command.append(str(d.with_suffix(".o")))
+            command.append("-I" + str(d.parent))
         for d in std_deps:
-            command.append(d[:-3] + ".o")
-            command.append("-I" + os.path.dirname(d))
-    command.append("-I" + base_dir)
+            command.append(str(Path(d).with_suffix(".o")))
+            command.append("-I" + str(Path(d).parent))
+    command.append("-I" + str(base_dir))
 
     if "gfortran" in compiler and sys.platform == "win32":
         command.append("-static-libgfortran")
@@ -242,29 +377,48 @@ def compile_fortran_or_c(
     command.append("-o")
     if is_mod:
         command.append(f"{root}.o")
+        executable = None
     else:
-        command.append(test_file[:-3])
+        executable = test_file.with_suffix("")
+        command.append(executable)
 
     if "module_output_flag" in compiler_info:
         command.append(compiler_info["module_output_flag"])
         command.append(base_dir)
 
-    with subprocess.Popen(command, universal_newlines=True, cwd=path_dir) as p:
-        p.wait()
+    subprocess.run(command, cwd=path_dir, check=True)
+
+    return executable
+
+
+# ------------------------------------------------------------------------------
+def get_python_output(abs_path, cwd=None):
+    assert abs_path.is_absolute()
+    p = subprocess.run(
+        [sys.executable, abs_path], text=True, capture_output=True, check=True, cwd=cwd
+    )
+    return p.stdout
 
 
 # ------------------------------------------------------------------------------
 def get_lang_output(abs_path, language):
-    abs_path = get_exe(abs_path, language)
     if language == "python":
         return get_python_output(abs_path)
     else:
-        p = subprocess.Popen(
-            ["%s" % abs_path], stdout=subprocess.PIPE, universal_newlines=True
-        )
-        out, _ = p.communicate()
-        assert p.returncode == 0
-        return out
+        p = subprocess.run([abs_path], text=True, capture_output=True, check=True)
+        return p.stdout
+
+
+# ------------------------------------------------------------------------------
+def get_lang_exit_value(abs_path, language, cwd=None):
+    if language == "python":
+        if cwd is None:
+            p = subprocess.run([sys.executable, abs_path], check=False)
+        else:
+            p = subprocess.run([sys.executable, abs_path], cwd=cwd, check=False)
+    else:
+        p = subprocess.run([abs_path], check=False)
+    return p.returncode
 
 
 # ------------------------------------------------------------------------------
@@ -357,7 +511,8 @@ def pyccel_test(
     pyccel_commands="",
     output_dtype=float,
     language=None,
-    output_dir=None,
+    *,
+    isolated_dir,
 ):
     """
     Run pyccel and compare the output to ensure that the results
@@ -366,15 +521,13 @@ def pyccel_test(
     Parameters
     ----------
     test_file : str
-                The name of the file containing the program.
-                The path must either be absolute or relative
+                The name of the file containing the program, relative
                 to the folder containing this file
     dependencies : str/list
                 The name of any files which are called by the
                 test_file and must therefore be pyccelized in
-                order to run it
-                The paths must either be absolute or relative
-                to the folder containing this file
+                order to run it. The paths must be relative to the
+                folder containing this file
     compile_with_pyccel : bool
                 Indicates whether the compilation step should
                 be handled by a basic call to gfortran/gcc (False)
@@ -382,7 +535,8 @@ def pyccel_test(
                 default : True
     cwd : str
                 The directory from which pyccel and other executables
-                will be called
+                will be called, relative to the folder containing
+                this file
                 default : The folder containing the test_file
     pyccel_commands : str
                 Any additional commands which should be passed to
@@ -394,157 +548,176 @@ def pyccel_test(
     language : str
                 The language pyccel should translate to
                 default = 'fortran'
-    output_dir : str
-                The folder in which the generated files should be
-                saved
+    isolated_dir : Path
+                The test-exclusive directory (typically pytest's
+                `tmp_path` fixture) into which test files are copied
+                and pyccel is run
     """
 
-    rel_test_dir = os.path.dirname(test_file)
+    if dependencies is None:
+        dependencies = []
+    elif isinstance(dependencies, str):
+        dependencies = [dependencies]
 
-    test_file = os.path.normpath(test_file)
+    (test_file,) = copy_to_isolated_dir(isolated_dir, [test_file])
+    dependencies = copy_to_isolated_dir(isolated_dir, dependencies)
+
+    test_dir = test_file.parent
 
     if cwd is None:
-        cwd = os.path.dirname(test_file)
-
-    cwd = get_abs_path(cwd)
-
-    test_file = get_abs_path(test_file)
+        cwd = test_dir
+    else:
+        assert not Path(cwd).is_absolute(), "cwd must be relative"
+        cwd = isolated_dir / cwd
 
     pyth_out = get_python_output(test_file, cwd)
 
     if language:
-        pyccel_commands += " --language=" + language
+        pyccel_commands += f" --language={language}"
     else:
         language = "fortran"
 
-    if output_dir is None:
-        if language == "python":
-            output_dir = os.path.join(get_abs_path(rel_test_dir), "__pyccel__")
+    output_dir = isolated_dir / "__pyccel__" if language == "python" else None
 
+    generated_dependencies = []
     if dependencies:
-        if isinstance(dependencies, str):
-            dependencies = [dependencies]
-        for i, d in enumerate(dependencies):
-            dependencies[i] = get_abs_path(d)
+        for d in dependencies:
             if output_dir:
-                rel_path = os.path.relpath(os.path.dirname(d), start=rel_test_dir)
-                output = get_abs_path(os.path.join(output_dir, rel_path))
-                pyc_command = pyccel_commands + " --output={}".format(output)
+                rel_path = d.parent.relative_to(test_dir)
+                output = output_dir / rel_path
+                pyc_command = pyccel_commands + f" --output={output}"
             else:
                 pyc_command = pyccel_commands
 
             if not compile_with_pyccel:
-                compile_pyccel(cwd, dependencies[i], pyc_command + " -t")
+                dep_output = compile_pyccel(cwd, d, pyc_command + " -t")
+                generated_dep = get_module_name_from_verbose_output(
+                    dep_output, expected_extensions[language]
+                )
                 if language == "fortran":
-                    compile_fortran(cwd, dependencies[i], [], is_mod=True)
+                    compile_fortran(cwd, d, generated_dep, [], is_mod=True)
                 elif language == "c":
-                    compile_c(cwd, dependencies[i], [], is_mod=True)
+                    compile_c(cwd, d, generated_dep, [], is_mod=True)
+                generated_dependencies.append(generated_dep)
             else:
-                compile_pyccel(cwd, dependencies[i], pyc_command)
+                compile_pyccel(cwd, d, pyc_command)
 
     if output_dir:
-        pyccel_commands += " --output " + output_dir
-        output_test_file = os.path.join(output_dir, os.path.basename(test_file))
+        pyccel_commands += " --output " + str(output_dir)
+        output_test_file = output_dir / test_file.name
     else:
         output_test_file = test_file
 
     if compile_with_pyccel:
-        compile_pyccel(cwd, test_file, pyccel_commands)
+        full_output = compile_pyccel(cwd, test_file, pyccel_commands)
+        test_exe = get_executable_name_from_verbose_output(full_output, language)
     else:
-        compile_pyccel(cwd, test_file, pyccel_commands + " -t")
-        if not dependencies:
-            dependencies = []
+        test_output = compile_pyccel(cwd, test_file, pyccel_commands + " -t")
+        generated_file = get_module_name_from_verbose_output(
+            test_output, expected_extensions[language]
+        )
         if language == "fortran":
-            compile_fortran(cwd, output_test_file, dependencies)
+            test_exe = compile_fortran(
+                cwd, output_test_file, generated_file, generated_dependencies
+            )
         elif language == "c":
-            compile_c(cwd, output_test_file, dependencies)
+            test_exe = compile_c(
+                cwd, output_test_file, generated_file, generated_dependencies
+            )
+        elif language == "python":
+            test_exe = output_test_file
+        else:
+            raise RuntimeError("Testing unknown language")
 
-    lang_out = get_lang_output(output_test_file, language)
+    lang_out = get_lang_output(test_exe, language)
     compare_pyth_fort_output(pyth_out, lang_out, output_dtype, language)
 
 
 # ==============================================================================
 # UNIT TESTS
 # ==============================================================================
-@pytest.mark.xdist_incompatible
-def test_relative_imports_in_project(language):
+def test_relative_imports_in_project(language, tmp_path):
 
-    base_dir = os.path.dirname(os.path.realpath(__file__))
-    path_dir = os.path.join(base_dir, "project_rel_imports")
     dependencies = [
         "project_rel_imports/project/folder1/mod1.py",
         "project_rel_imports/project/folder2/mod2.py",
         "project_rel_imports/project/folder2/mod3.py",
     ]
     pyccel_test(
-        "project_rel_imports/runtest.py", dependencies, cwd=path_dir, language=language
+        "project_rel_imports/runtest.py",
+        dependencies,
+        cwd="project_rel_imports",
+        language=language,
+        isolated_dir=tmp_path,
     )
 
 
 # ------------------------------------------------------------------------------
-@pytest.mark.xdist_incompatible
-def test_absolute_imports_in_project(language):
+def test_absolute_imports_in_project(language, tmp_path):
 
-    base_dir = os.path.dirname(os.path.realpath(__file__))
-    path_dir = os.path.join(base_dir, "project_abs_imports")
     dependencies = [
         "project_abs_imports/project/folder1/mod1.py",
         "project_abs_imports/project/folder2/mod2.py",
         "project_abs_imports/project/folder2/mod3.py",
     ]
     pyccel_test(
-        "project_abs_imports/runtest.py", dependencies, cwd=path_dir, language=language
+        "project_abs_imports/runtest.py",
+        dependencies,
+        cwd="project_abs_imports",
+        language=language,
+        isolated_dir=tmp_path,
     )
 
 
 # ------------------------------------------------------------------------------
-def test_rel_imports_python_accessible_folder(language):
+def test_rel_imports_python_accessible_folder(language, tmp_path):
     # pyccel is called on scripts/folder2/runtest_rel_imports.py from the scripts folder
     # From this folder python understands relative imports
-    base_dir = os.path.dirname(os.path.realpath(__file__))
-    path_dir = os.path.join(base_dir, "scripts")
     from scripts.folder2.runtest_rel_imports import test_func
-
-    tmp_dir = os.path.join(base_dir, "__pyccel__")
 
     pyth_out = str(test_func())
 
-    pyccel_opt = "--language={}".format(language)
+    run_import_path, folder2_funcs_path, runtest_imports_path = copy_to_isolated_dir(
+        tmp_path,
+        [
+            "run_import_function.py",
+            "scripts/folder2/folder2_funcs.py",
+            "scripts/folder2/runtest_rel_imports.py",
+        ],
+    )
+    path_dir = tmp_path / "scripts"
+
+    pyccel_opt = f"--language={language}"
     if language == "python":
-        pyccel_opt += " --output={}".format(os.path.join(tmp_dir, "folder2"))
+        pyccel_opt += f" --output={tmp_path / '__pyccel__/folder2'}"
     compile_pyccel(
-        os.path.join(path_dir, "folder2"),
-        get_abs_path("scripts/folder2/folder2_funcs.py"),
+        path_dir / "folder2",
+        folder2_funcs_path,
         pyccel_opt,
     )
-    compile_pyccel(
-        path_dir, get_abs_path("scripts/folder2/runtest_rel_imports.py"), pyccel_opt
-    )
+    compile_pyccel(path_dir, runtest_imports_path, pyccel_opt)
     if language == "python":
         test_location = "__pyccel__.folder2.runtest_rel_imports"
     else:
         test_location = "scripts.folder2.runtest_rel_imports"
-    p = subprocess.Popen(
+    p = subprocess.run(
         [
             sys.executable,
-            "%s" % os.path.join(base_dir, "run_import_function.py"),
+            str(run_import_path),
             test_location,
         ],
-        stdout=subprocess.PIPE,
-        universal_newlines=True,
+        text=True,
+        capture_output=True,
+        check=True,
     )
-    fort_out, _ = p.communicate()
-    assert p.returncode == 0
+    fort_out = p.stdout
 
     compare_pyth_fort_output(pyth_out, fort_out)
 
 
 # ------------------------------------------------------------------------------
-@pytest.mark.xdist_incompatible
-def test_multi_imports_project(language):
+def test_multi_imports_project(language, tmp_path):
 
-    base_dir = os.path.dirname(os.path.realpath(__file__))
-    path_dir = os.path.join(base_dir, "project_multi_imports")
     dependencies = [
         "project_multi_imports/file1.py",
         "project_multi_imports/file2.py",
@@ -553,72 +726,78 @@ def test_multi_imports_project(language):
     pyccel_test(
         "project_multi_imports/file4.py",
         dependencies,
-        cwd=path_dir,
+        cwd="project_multi_imports",
         language=language,
         output_dtype=str,
+        isolated_dir=tmp_path,
     )
 
 
 # ------------------------------------------------------------------------------
-@pytest.mark.xdist_incompatible
-def test_imports_compile(language):
+def test_imports_compile(language, tmp_path):
     pyccel_test(
         "scripts/runtest_imports.py",
         "scripts/funcs.py",
         compile_with_pyccel=False,
         language=language,
+        isolated_dir=tmp_path,
     )
 
 
 # ------------------------------------------------------------------------------
-@pytest.mark.xdist_incompatible
-def test_imports_in_folder(language):
+def test_imports_in_folder(language, tmp_path):
     pyccel_test(
         "scripts/runtest_folder_imports.py",
         "scripts/folder1/folder1_funcs.py",
         compile_with_pyccel=False,
         language=language,
+        isolated_dir=tmp_path,
     )
 
 
 # ------------------------------------------------------------------------------
-@pytest.mark.xdist_incompatible
-def test_imports(language):
-    pyccel_test("scripts/runtest_imports.py", "scripts/funcs.py", language=language)
+def test_imports(language, tmp_path):
+    pyccel_test(
+        "scripts/runtest_imports.py",
+        "scripts/funcs.py",
+        language=language,
+        isolated_dir=tmp_path,
+    )
 
 
 # ------------------------------------------------------------------------------
-@pytest.mark.xdist_incompatible
-def test_folder_imports(language):
+def test_folder_imports(language, tmp_path):
     # pyccel is called on scripts/folder2/runtest_imports2.py from the scripts/folder2 folder
     # which is where the final .so file should be
     # From this folder python doesn't understand relative imports
-    base_dir = os.path.dirname(os.path.realpath(__file__))
-    path_dir = os.path.join(base_dir, "scripts")
-    tmp_dir = os.path.join(base_dir, "__pyccel__")
-
     from scripts.folder2.runtest_imports2 import test_func
 
     pyth_out = str(test_func())
 
-    language_opt = "--language={}".format(language)
+    run_import_path, folder1_funcs_path, runtest_imports_path = copy_to_isolated_dir(
+        tmp_path,
+        [
+            "run_import_function.py",
+            "scripts/folder1/folder1_funcs.py",
+            "scripts/folder2/runtest_imports2.py",
+        ],
+    )
+    path_dir = tmp_path / "scripts"
+
+    language_opt = f"--language={language}"
     pyccel_opt = language_opt
     if language == "python":
-        pyccel_opt = language_opt + " --output={}".format(
-            os.path.join(tmp_dir, "folder1")
-        )
+        pyccel_opt = language_opt + f" --output={tmp_path / '__pyccel__' / 'folder1'}"
     compile_pyccel(
-        os.path.join(path_dir, "folder1"),
-        get_abs_path("scripts/folder1/folder1_funcs.py"),
+        path_dir / "folder1",
+        folder1_funcs_path,
         pyccel_opt,
     )
     if language == "python":
-        pyccel_opt = language_opt + " --output={}".format(
-            os.path.join(tmp_dir, "folder2")
-        )
+        pyccel_opt = language_opt + f" --output={tmp_path / '__pyccel__' / 'folder2'}"
     compile_pyccel(
-        os.path.join(path_dir, "folder2"),
-        get_abs_path("scripts/folder2/runtest_imports2.py"),
+        path_dir / "folder2",
+        runtest_imports_path,
         pyccel_opt,
     )
 
@@ -626,32 +805,30 @@ def test_folder_imports(language):
         test_location = "__pyccel__.folder2.runtest_imports2"
     else:
         test_location = "scripts.folder2.runtest_imports2"
-    p = subprocess.Popen(
+    p = subprocess.run(
         [
             sys.executable,
-            "%s" % os.path.join(base_dir, "run_import_function.py"),
+            run_import_path,
             test_location,
         ],
-        stdout=subprocess.PIPE,
-        universal_newlines=True,
+        text=True,
+        capture_output=True,
+        check=True,
     )
-    fort_out, _ = p.communicate()
-    assert p.returncode == 0
+    fort_out = p.stdout
 
     compare_pyth_fort_output(pyth_out, fort_out)
 
 
 # ------------------------------------------------------------------------------
-@pytest.mark.xdist_incompatible
-def test_funcs(language):
-    pyccel_test("scripts/runtest_funcs.py", language=language)
+def test_funcs(language, tmp_path):
+    pyccel_test("scripts/runtest_funcs.py", language=language, isolated_dir=tmp_path)
 
 
-@pytest.mark.xdist_incompatible
-def test_capitalised_language(language):
-    test_file = get_abs_path("scripts/runtest_funcs.py")
-    cwd = os.path.dirname(test_file)
-    output_folder = "__pyccel__" + os.environ.get("PYTEST_XDIST_WORKER", "")
+def test_capitalised_language(language, tmp_path):
+    (test_file,) = copy_to_isolated_dir(tmp_path, ["scripts/runtest_funcs.py"])
+    cwd = test_file.parent
+    output_folder = tmp_path / "__pyccel__"
     compile_pyccel(
         cwd, test_file, f"--language={language.capitalize()} --output={output_folder}"
     )
@@ -659,17 +836,24 @@ def test_capitalised_language(language):
 
 # ------------------------------------------------------------------------------
 # Enumerate not supported in c
-def test_inout_func(language):
-    pyccel_test("scripts/runtest_inoutfunc.py", language=language)
+def test_inout_func(language, tmp_path):
+    pyccel_test(
+        "scripts/runtest_inoutfunc.py", language=language, isolated_dir=tmp_path
+    )
 
 
 # ------------------------------------------------------------------------------
-def test_bool(language):
-    pyccel_test("scripts/bool_comp.py", output_dtype=bool, language=language)
+def test_bool(language, tmp_path):
+    pyccel_test(
+        "scripts/bool_comp.py",
+        output_dtype=bool,
+        language=language,
+        isolated_dir=tmp_path,
+    )
 
 
 # ------------------------------------------------------------------------------
-def test_expressions(experimental_language):
+def test_expressions(experimental_language, tmp_path):
     types = (
         [float, complex, int, float, float, int]
         + [float] * 3
@@ -689,13 +873,16 @@ def test_expressions(experimental_language):
         + [bool] * 9
     )
     pyccel_test(
-        "scripts/expressions.py", language=experimental_language, output_dtype=types
+        "scripts/expressions.py",
+        language=experimental_language,
+        output_dtype=types,
+        isolated_dir=tmp_path,
     )
 
 
 # ------------------------------------------------------------------------------
 @pytest.mark.fortran
-def test_generic_functions():
+def test_generic_functions(tmp_path):
     # Only testing Fortran for simple compilation outside of Pyccel
     pyccel_test(
         "scripts/runtest_generic_functions.py",
@@ -720,12 +907,12 @@ def test_generic_functions():
             int,
             int,
         ],
+        isolated_dir=tmp_path,
     )
 
 
 # ------------------------------------------------------------------------------
-@pytest.mark.xdist_incompatible
-def test_default_arguments(language):
+def test_default_arguments(language, tmp_path):
     pyccel_test(
         "scripts/runtest_default_args.py",
         dependencies="scripts/default_args_mod.py",
@@ -754,32 +941,31 @@ def test_default_arguments(language):
             float,
         ],
         language=language,
+        isolated_dir=tmp_path,
     )
 
 
 # ------------------------------------------------------------------------------
-@pytest.mark.xdist_incompatible
-def test_pyccel_calling_directory(language):
-    cwd = get_abs_path(".")
+def test_pyccel_calling_directory(language, tmp_path):
+    (test_file,) = copy_to_isolated_dir(tmp_path, ["scripts/runtest_funcs.py"])
+    cwd = tmp_path
 
-    test_file = get_abs_path("scripts/runtest_funcs.py")
     pyth_out = get_python_output(test_file)
 
-    language_opt = "--language={}".format(language)
-    compile_pyccel(cwd, test_file, language_opt)
+    language_opt = f"--language={language}"
+    output = compile_pyccel(cwd, test_file, language_opt)
 
-    if language == "python":
-        test_file = get_abs_path(
-            os.path.join("__pyccel__", os.path.basename(test_file))
-        )
-    fort_out = get_lang_output(test_file, language)
+    test_exe = get_executable_name_from_verbose_output(output, language)
+    fort_out = get_lang_output(test_exe, language)
 
     compare_pyth_fort_output(pyth_out, fort_out)
 
 
 # ------------------------------------------------------------------------------
-def test_in_specified(language):
-    pyccel_test("scripts/runtest_degree_in.py", language=language)
+def test_in_specified(language, tmp_path):
+    pyccel_test(
+        "scripts/runtest_degree_in.py", language=language, isolated_dir=tmp_path
+    )
 
 
 # ------------------------------------------------------------------------------
@@ -795,8 +981,8 @@ def test_in_specified(language):
         "scripts/hope_benchmarks/simplify.py",
     ],
 )
-def test_hope_benchmarks(test_file, language):
-    pyccel_test(test_file, language=language)
+def test_hope_benchmarks(test_file, language, tmp_path):
+    pyccel_test(test_file, language=language, isolated_dir=tmp_path)
 
 
 # ------------------------------------------------------------------------------
@@ -815,8 +1001,8 @@ def test_hope_benchmarks(test_file, language):
         "scripts/import_syntax/collisions5.py",
     ],
 )
-def test_import_syntax(test_file, language):
-    pyccel_test(test_file, language=language)
+def test_import_syntax(test_file, language, tmp_path):
+    pyccel_test(test_file, language=language, isolated_dir=tmp_path)
 
 
 # ------------------------------------------------------------------------------
@@ -829,10 +1015,12 @@ def test_import_syntax(test_file, language):
         "scripts/runtest_import_mod_project_as.py",
     ],
 )
-@pytest.mark.xdist_incompatible
-def test_import_syntax_user_as(test_file, language):
+def test_import_syntax_user_as(test_file, language, tmp_path):
     pyccel_test(
-        test_file, dependencies="scripts/import_syntax/user_mod.py", language=language
+        test_file,
+        dependencies="scripts/import_syntax/user_mod.py",
+        language=language,
+        isolated_dir=tmp_path,
     )
 
 
@@ -848,16 +1036,17 @@ def test_import_syntax_user_as(test_file, language):
         "scripts/import_syntax/import_mod_as_user_func.py",
     ],
 )
-@pytest.mark.xdist_incompatible
-def test_import_syntax_user(test_file, language):
+def test_import_syntax_user(test_file, language, tmp_path):
     pyccel_test(
-        test_file, dependencies="scripts/import_syntax/user_mod.py", language=language
+        test_file,
+        dependencies="scripts/import_syntax/user_mod.py",
+        language=language,
+        isolated_dir=tmp_path,
     )
 
 
 # ------------------------------------------------------------------------------
-@pytest.mark.xdist_incompatible
-def test_import_collisions(language):
+def test_import_collisions(language, tmp_path):
     pyccel_test(
         "scripts/import_syntax/collisions4.py",
         dependencies=[
@@ -865,42 +1054,35 @@ def test_import_collisions(language):
             "scripts/import_syntax/user_mod2.py",
         ],
         language=language,
+        isolated_dir=tmp_path,
     )
 
 
 # ------------------------------------------------------------------------------
-@pytest.mark.xdist_incompatible
-def test_import_collisions_builtins(language):
+def test_import_collisions_builtins(language, tmp_path):
     pyccel_test(
         "scripts/import_syntax/collisions6.py",
         dependencies=["scripts/import_syntax/user_mod_builtin_conflict.py"],
         language=language,
+        isolated_dir=tmp_path,
     )
 
 
 # ------------------------------------------------------------------------------
-@pytest.mark.xdist_incompatible
-def test_class_import_as(language):
+def test_class_import_as(language, tmp_path):
     pyccel_test(
         "scripts/import_syntax/from_cls_mod_import_as_user.py",
         dependencies=["scripts/import_syntax/user_cls_mod.py"],
         language=language,
+        isolated_dir=tmp_path,
     )
 
 
 # ------------------------------------------------------------------------------
-# Numpy sum required
-@pytest.mark.parametrize(
-    "language",
-    (
-        pytest.param("fortran", marks=pytest.mark.fortran),
-        pytest.param("python", marks=pytest.mark.python),
-    ),
-)
-def test_numpy_kernels_compile(language):
-    pyccel_opt = "--language={}".format(language)
-    cwd = get_abs_path(".")
-    compile_pyccel(os.path.join(cwd, "scripts/numpy/"), "numpy_kernels.py", pyccel_opt)
+def test_numpy_kernels_compile(language, tmp_path):
+    pyccel_opt = f"--language={language}"
+    (test_file,) = copy_to_isolated_dir(tmp_path, ["scripts/numpy/numpy_kernels.py"])
+    compile_pyccel(test_file.parent, test_file, pyccel_opt)
 
 
 # ------------------------------------------------------------------------------
@@ -911,12 +1093,14 @@ def test_numpy_kernels_compile(language):
         pytest.param("python", marks=pytest.mark.python),
     ),
 )
-def test_randint_size_program(language):
-    pyccel_test("scripts/numpy/randint_size.py", language=language)
+def test_randint_size_program(language, tmp_path):
+    pyccel_test(
+        "scripts/numpy/randint_size.py", language=language, isolated_dir=tmp_path
+    )
 
 
 # ------------------------------------------------------------------------------
-def test_multiple_results(language):
+def test_multiple_results(language, tmp_path):
     pyccel_test(
         "scripts/runtest_multiple_results.py",
         output_dtype=[
@@ -954,19 +1138,25 @@ def test_multiple_results(language):
             int,
         ],
         language=language,
+        isolated_dir=tmp_path,
     )
 
 
 # ------------------------------------------------------------------------------
-def test_elemental(language):
-    pyccel_test("scripts/decorators_elemental.py", language=language)
+def test_elemental(language, tmp_path):
+    pyccel_test(
+        "scripts/decorators_elemental.py", language=language, isolated_dir=tmp_path
+    )
 
 
 # ------------------------------------------------------------------------------
-def test_print_strings(experimental_language):
+def test_print_strings(experimental_language, tmp_path):
     types = str
     pyccel_test(
-        "scripts/print_strings.py", language=experimental_language, output_dtype=types
+        "scripts/print_strings.py",
+        language=experimental_language,
+        output_dtype=types,
+        isolated_dir=tmp_path,
     )
 
 
@@ -985,29 +1175,40 @@ def test_print_strings(experimental_language):
         ),
     ),
 )
-def test_print_nan(language):
+def test_print_nan(language, tmp_path):
     types = str
-    pyccel_test("scripts/print_nan.py", language=language, output_dtype=types)
+    pyccel_test(
+        "scripts/print_nan.py",
+        language=language,
+        output_dtype=types,
+        isolated_dir=tmp_path,
+    )
 
 
 # ------------------------------------------------------------------------------
-def test_print_integers(language):
+def test_print_integers(language, tmp_path):
     types = str
-    pyccel_test("scripts/print_integers.py", language=language, output_dtype=types)
+    pyccel_test(
+        "scripts/print_integers.py",
+        language=language,
+        output_dtype=types,
+        isolated_dir=tmp_path,
+    )
 
 
 # ------------------------------------------------------------------------------
-def test_print_sp_and_end(experimental_language):
+def test_print_sp_and_end(experimental_language, tmp_path):
     types = str
     pyccel_test(
         "scripts/print_sp_and_end.py",
         language=experimental_language,
         output_dtype=types,
+        isolated_dir=tmp_path,
     )
 
 
 # ------------------------------------------------------------------------------
-def test_c_arrays(language):
+def test_c_arrays(language, tmp_path):
     types = (
         [int] * 15
         + [float] * 5
@@ -1022,7 +1223,12 @@ def test_c_arrays(language):
         + [float] * 2 * 3
         + [int] * 3
     )
-    pyccel_test("scripts/c_arrays.py", language=language, output_dtype=types)
+    pyccel_test(
+        "scripts/c_arrays.py",
+        language=language,
+        output_dtype=types,
+        isolated_dir=tmp_path,
+    )
 
 
 # ------------------------------------------------------------------------------
@@ -1040,7 +1246,7 @@ def test_c_arrays(language):
         ),
     ),
 )
-def test_arrays_view(language):
+def test_arrays_view(language, tmp_path):
     types = (
         [int] * 10
         + [int] * 10
@@ -1063,13 +1269,19 @@ def test_arrays_view(language):
             language=language,
             output_dtype=types,
             pyccel_commands="--no-debug",
+            isolated_dir=tmp_path,
         )
     else:
-        pyccel_test("scripts/arrays_view.py", language=language, output_dtype=types)
+        pyccel_test(
+            "scripts/arrays_view.py",
+            language=language,
+            output_dtype=types,
+            isolated_dir=tmp_path,
+        )
 
 
 # ------------------------------------------------------------------------------
-def test_return_numpy_arrays(language):
+def test_return_numpy_arrays(language, tmp_path):
     types = [int] * 4  # 4 ints for a
     types += [int] * 2  # 2 ints for b
     types += [float] * 2  # 2 floats for c
@@ -1079,11 +1291,16 @@ def test_return_numpy_arrays(language):
     types += [int] * 5  # 5 ints for g
     types += [int] * 4  # 4 ints for k
     types += [float] * 48  # 48 floats for x
-    pyccel_test("scripts/return_numpy_arrays.py", language=language, output_dtype=types)
+    pyccel_test(
+        "scripts/return_numpy_arrays.py",
+        language=language,
+        output_dtype=types,
+        isolated_dir=tmp_path,
+    )
 
 
 # ------------------------------------------------------------------------------
-def test_array_binary_op(language):
+def test_array_binary_op(language, tmp_path):
     types = [int] * 4
     types += [int, float, int, int]
     types += [int] * 4
@@ -1094,7 +1311,10 @@ def test_array_binary_op(language):
     types += [int, float, int, int]
     types += [int] * 8
     pyccel_test(
-        "scripts/array_binary_operation.py", language=language, output_dtype=types
+        "scripts/array_binary_operation.py",
+        language=language,
+        output_dtype=types,
+        isolated_dir=tmp_path,
     )
 
 
@@ -1120,101 +1340,85 @@ def test_array_binary_op(language):
         "scripts/classes/class_pointer_2.py",
     ],
 )
-def test_classes(test_file, language):
-    pyccel_test(test_file, language=language)
+def test_classes(test_file, language, tmp_path):
+    pyccel_test(test_file, language=language, isolated_dir=tmp_path)
 
 
-def test_class_magic(language):
+def test_class_magic(language, tmp_path):
     pyccel_test(
         "scripts/classes/class_magic.py",
         language=language,
         output_dtype=[int] * 6 + [bool] * 2 + [int],
+        isolated_dir=tmp_path,
     )
 
 
-def test_tuples_in_classes(language):
+def test_tuples_in_classes(language, tmp_path):
     test_file = "scripts/classes/tuples_in_classes.py"
     pyccel_test(
-        test_file, language=language, output_dtype=[float, float, float, bool, bool]
+        test_file,
+        language=language,
+        output_dtype=[float, float, float, bool, bool],
+        isolated_dir=tmp_path,
     )
 
 
-def test_classes_type_print(language):
-    test_file = "scripts/classes/empty_class.py"
+def test_classes_type_print(language, tmp_path):
+    (test_file,) = copy_to_isolated_dir(tmp_path, ["scripts/classes/empty_class.py"])
+    cwd = test_file.parent
 
-    rel_test_dir = os.path.dirname(test_file)
-
-    test_file = os.path.normpath(test_file)
-
-    cwd = os.path.dirname(test_file)
-    cwd = get_abs_path(cwd)
-
-    test_file = get_abs_path(test_file)
-
-    pyccel_commands = " --language=" + language
+    pyccel_commands = f" --language={language}"
 
     if language == "python":
-        output_dir = os.path.join(get_abs_path(rel_test_dir), "__pyccel__")
-        pyccel_commands += " --output " + output_dir
-        output_test_file = os.path.join(output_dir, os.path.basename(test_file))
-    else:
-        output_test_file = test_file
+        pyccel_commands += f" --output={cwd / '__pyccel__'}"
 
-    compile_pyccel(cwd, test_file, pyccel_commands)
+    output = compile_pyccel(cwd, test_file, pyccel_commands)
+    test_exe = get_executable_name_from_verbose_output(output, language)
 
-    lang_out = get_lang_output(output_test_file, language)
+    lang_out = get_lang_output(test_exe, language)
 
     rx = re.compile(r"\bA\b")
     assert rx.search(lang_out)
 
 
-def test_class_inline_array(language):
+def test_class_inline_array(language, tmp_path):
     pyccel_test(
         "scripts/classes/class_inline.py",
         dependencies=["scripts/classes/importable.py"],
         language=language,
         output_dtype=float,
+        isolated_dir=tmp_path,
     )
 
 
 # ------------------------------------------------------------------------------
-@pytest.mark.xdist_incompatible
-@pytest.mark.parametrize(
-    "test_file",
-    [
-        "scripts/classes/generic_methods.py",
-    ],
-)
-def test_interfaces_in_classes(test_file, language):
-    pyccel_test(test_file, language=language)
+def test_interfaces_in_classes(language, tmp_path):
+    pyccel_test(
+        "scripts/classes/generic_methods.py", language=language, isolated_dir=tmp_path
+    )
 
 
 # ------------------------------------------------------------------------------
-@pytest.mark.parametrize(
-    "test_file",
-    [
-        "scripts/lapack_subroutine.py",
-    ],
-)
 @pytest.mark.skipif(
     sys.platform == "win32",
     reason="Compilation problem. On execution Windows raises: error while loading shared libraries: liblapack.dll: cannot open shared object file: No such file or directory",
 )
 @pytest.mark.external
 @pytest.mark.fortran
-def test_lapack(test_file):
+def test_lapack(tmp_path):
     # TODO: Uncomment this when dgetri can be expressed with scipy
     # pyccel_test(test_file)
 
     # TODO: Remove the rest of the function when dgetri can be expressed with scipy
-    test_file = os.path.normpath(test_file)
-    test_file = get_abs_path(test_file)
+    (test_file,) = copy_to_isolated_dir(tmp_path, ["scripts/lapack_subroutine.py"])
 
-    cwd = get_abs_path(".")
+    cwd = test_file.parent
 
-    compile_pyccel(cwd, test_file)
+    output = compile_pyccel(cwd, test_file)
 
-    lang_out = get_lang_output(test_file, "fortran")
+    lang_out = get_lang_output(
+        get_executable_name_from_verbose_output(output), "fortran"
+    )
     rx = re.compile("[-0-9.eE]+")
     lang_out_vals = []
     while lang_out:
@@ -1230,38 +1434,30 @@ def test_lapack(test_file):
 
 
 # ------------------------------------------------------------------------------
-def test_type_print(experimental_language):
+def test_type_print(experimental_language, tmp_path):
     pyccel_test(
         "scripts/runtest_type_print.py",
         language=experimental_language,
         output_dtype=str,
+        isolated_dir=tmp_path,
     )
 
 
-def test_container_type_print(language):
-    test_file = "scripts/runtest_array_type_print.py"
+def test_container_type_print(language, tmp_path):
+    (test_file,) = copy_to_isolated_dir(
+        tmp_path, ["scripts/runtest_array_type_print.py"]
+    )
+    cwd = test_file.parent
 
-    rel_test_dir = os.path.dirname(test_file)
-
-    test_file = os.path.normpath(test_file)
-
-    cwd = os.path.dirname(test_file)
-    cwd = get_abs_path(cwd)
-
-    test_file = get_abs_path(test_file)
-
-    pyccel_commands = " --language=" + language
+    pyccel_commands = f" --language={language}"
 
     if language == "python":
-        output_dir = os.path.join(get_abs_path(rel_test_dir), "__pyccel__")
-        pyccel_commands += " --output " + output_dir
-        output_test_file = os.path.join(output_dir, os.path.basename(test_file))
-    else:
-        output_test_file = test_file
+        pyccel_commands += f" --output={cwd / '__pyccel__'}"
 
-    compile_pyccel(cwd, test_file, pyccel_commands)
+    output = compile_pyccel(cwd, test_file, pyccel_commands)
+    test_exe = get_executable_name_from_verbose_output(output, language)
 
-    lang_out = get_lang_output(output_test_file, language)
+    lang_out = get_lang_output(test_exe, language)
 
     rx = re.compile(r"\bnumpy.ndarray\b")
     assert rx.search(lang_out)
@@ -1274,21 +1470,16 @@ def test_container_type_print(language):
 # ------------------------------------------------------------------------------
 
 
-def test_module_init(language):
-    test_mod = get_abs_path("scripts/module_init.py")
-    test_prog = get_abs_path("scripts/runtest_module_init.py")
-
-    output_dir = get_abs_path("scripts/__pyccel__")
-    output_test_file = os.path.join(output_dir, os.path.basename(test_prog))
-
-    cwd = get_abs_path("scripts")
-
-    pyccel_commands = "--language=" + language
-    if language == "python":
-        if output_dir is None:
-            pyccel_commands += "--output=" + output_dir
+def test_module_init(language, tmp_path):
+    test_mod, test_prog = copy_to_isolated_dir(
+        tmp_path, ["scripts/module_init.py", "scripts/runtest_module_init.py"]
+    )
 
     pyth_out = get_python_output(test_prog)
+
+    cwd = test_prog.parent
+
+    pyccel_commands = f"--language={language}"
 
     compile_pyccel(cwd, test_mod, pyccel_commands)
 
@@ -1296,30 +1487,15 @@ def test_module_init(language):
         pyth_mod_out = get_python_output(test_prog, cwd)
         compare_pyth_fort_output(pyth_out, pyth_mod_out, str, language)
 
-    compile_pyccel(cwd, test_prog, pyccel_commands)
+    prog_output = compile_pyccel(cwd, test_prog, pyccel_commands)
+    test_exe = get_executable_name_from_verbose_output(prog_output, language)
 
-    if language == "python":
-        lang_out = get_lang_output(output_test_file, language)
-    else:
-        lang_out = get_lang_output(test_prog, language)
+    lang_out = get_lang_output(test_exe, language)
 
     compare_pyth_fort_output(pyth_out, lang_out, str, language)
 
 
 # ------------------------------------------------------------------------------
-def get_lang_exit_value(abs_path, language, cwd=None):
-    abs_path = get_exe(abs_path, language)
-    if language == "python":
-        if cwd is None:
-            p = subprocess.Popen([sys.executable, abs_path])
-        else:
-            p = subprocess.Popen([sys.executable, abs_path], cwd=cwd)
-    else:
-        p = subprocess.Popen([abs_path])
-    p.communicate()
-    return p.returncode
-
-
 @pytest.mark.parametrize(
     "test_file",
     [
@@ -1329,22 +1505,22 @@ def get_lang_exit_value(abs_path, language, cwd=None):
         "scripts/asserts/invalid_assert3.py",
     ],
 )
-def test_assert(language, test_file):
-    test_dir = os.path.dirname(test_file)
-    test_file = get_abs_path(os.path.normpath(test_file))
+def test_assert(language, test_file, tmp_path):
+    (test_file,) = copy_to_isolated_dir(tmp_path, [test_file])
 
-    output_dir = os.path.join(get_abs_path(test_dir), "__pyccel__")
-    output_test_file = os.path.join(output_dir, os.path.basename(test_file))
+    pyth_out = get_lang_exit_value(test_file, "python")
 
-    cwd = get_abs_path(test_dir)
+    output_dir = tmp_path / "__pyccel__"
 
-    pyccel_commands = " --language=" + language
-    pyccel_commands += " --output=" + output_dir
+    cwd = tmp_path
+
+    pyccel_commands = f" --language={language}"
+    pyccel_commands += f" --output={output_dir}"
     pyccel_commands += " --debug"
 
-    compile_pyccel(cwd, test_file, pyccel_commands)
-    lang_out = get_lang_exit_value(output_test_file, language)
-    pyth_out = get_lang_exit_value(test_file, "python")
+    output = compile_pyccel(cwd, test_file, pyccel_commands)
+    test_exe = get_executable_name_from_verbose_output(output, language)
+    lang_out = get_lang_exit_value(test_exe, language)
     assert (not lang_out and not pyth_out) or (lang_out and pyth_out)
 
 
@@ -1362,50 +1538,44 @@ def test_assert(language, test_file):
         "scripts/exits/error_message_exit.py",
     ],
 )
-def test_exit(language, test_file):
-    test_dir = os.path.dirname(test_file)
-    test_file = get_abs_path(os.path.normpath(test_file))
+def test_exit(language, test_file, tmp_path):
+    (test_file,) = copy_to_isolated_dir(tmp_path, [test_file])
 
-    output_dir = os.path.join(get_abs_path(test_dir), "__pyccel__")
-    output_test_file = os.path.join(output_dir, os.path.basename(test_file))
+    pyth_out = get_lang_exit_value(test_file, "python")
 
-    cwd = get_abs_path(test_dir)
+    output_dir = tmp_path / "__pyccel__"
+
+    cwd = tmp_path
 
     if not language:
         language = "fortran"
-    pyccel_commands = " --language=" + language
-    pyccel_commands += " --output=" + output_dir
+    pyccel_commands = f" --language={language}"
+    pyccel_commands += f" --output={output_dir}"
 
-    compile_pyccel(cwd, test_file, pyccel_commands)
-    lang_out = get_lang_exit_value(output_test_file, language)
-    pyth_out = get_lang_exit_value(test_file, "python")
+    output = compile_pyccel(cwd, test_file, pyccel_commands)
+    test_exe = get_executable_name_from_verbose_output(output, language)
+    lang_out = get_lang_exit_value(test_exe, language)
     assert lang_out == pyth_out
 
 
 # ------------------------------------------------------------------------------
-def test_module_init_collisions(language):
-    test_mod = get_abs_path("scripts/module_init2.py")
-    test_prog = get_abs_path("scripts/runtest_module_init2.py")
-
-    output_dir = get_abs_path("scripts/__pyccel__")
-    output_test_file = os.path.join(output_dir, os.path.basename(test_prog))
-
-    cwd = get_abs_path("scripts")
-
-    pyccel_commands = "--language=" + language
-    if language == "python":
-        if output_dir is None:
-            pyccel_commands += "--output=" + output_dir
+def test_module_init_collisions(language, tmp_path):
+    test_mod, test_prog = copy_to_isolated_dir(
+        tmp_path, ["scripts/module_init2.py", "scripts/runtest_module_init2.py"]
+    )
 
     pyth_out = get_python_output(test_prog)
 
-    compile_pyccel(cwd, test_mod, pyccel_commands)
-    compile_pyccel(cwd, test_prog, pyccel_commands)
+    cwd = tmp_path
 
-    if language == "python":
-        lang_out = get_lang_output(output_test_file, language)
-    else:
-        lang_out = get_lang_output(test_prog, language)
+    pyccel_commands = f"--language={language}"
+
+    compile_pyccel(cwd, test_mod, pyccel_commands)
+    prog_output = compile_pyccel(cwd, test_prog, pyccel_commands)
+
+    lang_out = get_lang_output(
+        get_executable_name_from_verbose_output(prog_output, language), language
+    )
 
     compare_pyth_fort_output(
         pyth_out,
@@ -1416,87 +1586,94 @@ def test_module_init_collisions(language):
 
 
 @pytest.mark.fortran
-def test_function_aliasing():
-    pyccel_test("scripts/runtest_function_alias.py", language="fortran")
+def test_function_aliasing(tmp_path):
+    pyccel_test(
+        "scripts/runtest_function_alias.py", language="fortran", isolated_dir=tmp_path
+    )
 
 
 # ------------------------------------------------------------------------------
 
 
-def test_function(language):
-    pyccel_test("scripts/functions.py", language=language, output_dtype=str)
+def test_function(language, tmp_path):
+    pyccel_test(
+        "scripts/functions.py",
+        language=language,
+        output_dtype=str,
+        isolated_dir=tmp_path,
+    )
 
 
 # ------------------------------------------------------------------------------
-@pytest.mark.xdist_incompatible
 @pytest.mark.skipif_by_language(
     os.environ.get("PYCCEL_DEFAULT_COMPILER", None) == "intel",
     reason="1671",
     language="fortran",
 )
-def test_inline(language):
-    pyccel_test("scripts/decorators_inline.py", language=language)
+def test_inline(language, tmp_path):
+    pyccel_test(
+        "scripts/decorators_inline.py", language=language, isolated_dir=tmp_path
+    )
 
 
 # ------------------------------------------------------------------------------
-@pytest.mark.xdist_incompatible
 @pytest.mark.skipif_by_language(
     os.environ.get("PYCCEL_DEFAULT_COMPILER", None) == "intel",
     reason="1671",
     language="fortran",
 )
-def test_inline_import(language):
+def test_inline_import(language, tmp_path):
     pyccel_test(
         "scripts/runtest_decorators_inline.py",
         dependencies=("scripts/decorators_inline.py"),
         language=language,
+        isolated_dir=tmp_path,
     )
 
 
 # ------------------------------------------------------------------------------
 @pytest.mark.language_agnostic
-def test_json():
-    output_dir = get_abs_path(insert_pyccel_folder("scripts/"))
+def test_json(tmp_path):
     cmd = [
         shutil.which("pyccel"),
         "config",
         "export",
-        f"{output_dir}/test.json",
+        f"{tmp_path}/test.json",
         "--compiler-family",
         "intel",
     ]
     subprocess.run(cmd, check=True)
-    with open(get_abs_path(f"{output_dir}/test.json"), "r", encoding="utf-8") as f:
+    with open(tmp_path / "test.json", "r", encoding="utf-8") as f:
         dict_1 = json.load(f)
     assert dict_1["c"]["exec"] == "icx"
     cmd = [
         shutil.which("pyccel"),
         "config",
         "export",
-        f"{output_dir}/test2.json",
+        f"{tmp_path}/test2.json",
         "--compiler-config",
-        f"{output_dir}/test.json",
+        f"{tmp_path}/test.json",
     ]
     subprocess.run(cmd, check=True)
-    with open(get_abs_path(f"{output_dir}/test2.json"), "r", encoding="utf-8") as f:
+    with open(tmp_path / "test2.json", "r", encoding="utf-8") as f:
         dict_2 = json.load(f)
 
     assert dict_1 == dict_2
 
 
-@pytest.mark.xdist_incompatible
 @pytest.mark.language_agnostic
-def test_json_relative_path():
-    output_dir = get_abs_path(insert_pyccel_folder("scripts/"))
-    cmd = [shutil.which("pyccel"), "config", "export", f"{output_dir}/test.json"]
+def test_json_relative_path(tmp_path):
+    (test_file,) = copy_to_isolated_dir(tmp_path, ["scripts/runtest_funcs.py"])
+
+    cmd = [shutil.which("pyccel"), "config", "export", str(tmp_path / "test.json")]
     subprocess.run(cmd, check=True)
-    shutil.move(
-        get_abs_path(f"{output_dir}/test.json"),
-        get_abs_path("scripts/hope_benchmarks/test.json"),
-    )
+
+    new_dir = tmp_path / "new_dir"
+    new_dir.mkdir(parents=True, exist_ok=True)
+    shutil.move(tmp_path / "test.json", new_dir / "test.json")
     compile_pyccel(
-        get_abs_path("scripts/hope_benchmarks"),
-        "../runtest_funcs.py",
+        new_dir,
+        test_file,
         "--compiler-config test.json",
     )
 
@@ -1509,83 +1686,86 @@ def test_json_relative_path():
         pytest.param("c", marks=pytest.mark.c),
     ),
 )
-@pytest.mark.xdist_incompatible
-def test_json_register(language):
-    output_dir = get_abs_path(insert_pyccel_folder("scripts/"))
-    example_json_path = f"{output_dir}/test.json"
-    cmd = [shutil.which("pyccel"), "config", "export", example_json_path]
-    subprocess.run(cmd, check=True)
-    with open(example_json_path, "r", encoding="utf-8") as f:
-        config = json.load(f)
-
-    config[language]["debug_flags"] = "-g -O0"
-
-    bad_format_json_path = f"{output_dir}/bad_format.json"
-    with open(bad_format_json_path, "w", encoding="utf-8") as f:
-        json.dump(config, f)
-
-    # Check `pyccel config check` command
-    cmd = [shutil.which("pyccel"), "config", "check", bad_format_json_path]
-    p = subprocess.run(cmd, check=False)
-    assert p.returncode == 1
-
-    config[language]["debug_flags"] = ["-g", "-O0"]
-    config[language]["general_flags"] = ["--version"]
-
+def test_json_register(language, tmp_path):
     current_config_folder = os.environ.get("PYCCEL_CONFIG_HOME", None)
-    os.environ["PYCCEL_CONFIG_HOME"] = get_abs_path(insert_pyccel_folder("."))
+    try:
+        example_json_path = str(tmp_path / "test.json")
+        cmd = [shutil.which("pyccel"), "config", "export", example_json_path]
+        subprocess.run(cmd, check=True)
+        with open(example_json_path, "r", encoding="utf-8") as f:
+            config = json.load(f)
 
-    # Check registration
-    timing_json_path = f"{output_dir}/timing.json"
-    print(timing_json_path)
-    with open(timing_json_path, "w", encoding="utf-8") as f:
-        json.dump(config, f)
-    cmd = [
-        shutil.which("pyccel"),
-        "config",
-        "register",
-        "compiler_timing",
-        timing_json_path,
-    ]
-    subprocess.run(cmd, check=True)
+        config[language]["debug_flags"] = "-g -O0"
 
-    # Check that existing compiler-family can't be overwritten
-    cmd = [
-        shutil.which("pyccel"),
-        "config",
-        "register",
-        "compiler_timing",
-        example_json_path,
-    ]
-    p = subprocess.run(cmd, check=False)
-    assert p.returncode == 1
+        bad_format_json_path = tmp_path / "bad_format.json"
+        with open(bad_format_json_path, "w", encoding="utf-8") as f:
+            json.dump(config, f)
 
-    cmd = [
-        shutil.which("pyccel"),
-        "compile",
-        "--compiler-family=compiler_timing",
-        f"--language={language}",
-        "-v",
-        get_abs_path("scripts/array_binary_operation.py"),
-    ]
-    p = subprocess.run(cmd, check=True, text=True, capture_output=True)
-    received_output = p.stdout
+        # Check `pyccel config check` command
+        cmd = [shutil.which("pyccel"), "config", "check", str(bad_format_json_path)]
+        p = subprocess.run(cmd, check=False)
+        assert p.returncode == 1
 
-    # Check version output for selected compiler
-    cmd = [shutil.which(config[language]["exec"]), "--version"]
-    p = subprocess.run(cmd, check=True, text=True, capture_output=True)
-    expected_output = p.stdout
+        config[language]["debug_flags"] = ["-g", "-O0"]
+        config[language]["general_flags"] = ["--version"]
 
-    # Check version output is present to ensure new config is being used
-    assert expected_output in received_output
+        os.environ["PYCCEL_CONFIG_HOME"] = str(tmp_path)
 
-    cmd = [shutil.which("pyccel"), "config", "remove", "compiler_timing"]
-    subprocess.run(cmd, check=True)
+        # Check registration
+        timing_json_path = tmp_path / "timing.json"
+        with open(timing_json_path, "w", encoding="utf-8") as f:
+            json.dump(config, f)
+        cmd = [
+            shutil.which("pyccel"),
+            "config",
+            "register",
+            "compiler_timing",
+            str(timing_json_path),
+        ]
+        subprocess.run(cmd, check=True)
 
-    if current_config_folder:
-        os.environ["PYCCEL_CONFIG_HOME"] = current_config_folder
-    else:
-        os.environ.pop("PYCCEL_CONFIG_HOME")
+        # Check that existing compiler-family can't be overwritten
+        cmd = [
+            shutil.which("pyccel"),
+            "config",
+            "register",
+            "compiler_timing",
+            example_json_path,
+        ]
+        p = subprocess.run(cmd, check=False)
+        assert p.returncode == 1
+
+        (test_file,) = copy_to_isolated_dir(
+            tmp_path, ["scripts/array_binary_operation.py"]
+        )
+
+        cmd = [
+            shutil.which("pyccel"),
+            "compile",
+            "--compiler-family=compiler_timing",
+            f"--language={language}",
+            "-v",
+            test_file,
+        ]
+        p = subprocess.run(cmd, check=True, text=True, capture_output=True)
+        received_output = p.stdout
+
+        # Check version output for selected compiler
+        cmd = [shutil.which(config[language]["exec"]), "--version"]
+        p = subprocess.run(cmd, check=True, text=True, capture_output=True)
+        expected_output = p.stdout
+
+        # Check version output is present to ensure new config is being used
+        assert expected_output in received_output
+
+        cmd = [shutil.which("pyccel"), "config", "remove", "compiler_timing"]
+        subprocess.run(cmd, check=True)
+
+    finally:
+        if current_config_folder:
+            os.environ["PYCCEL_CONFIG_HOME"] = current_config_folder
+        else:
+            os.environ.pop("PYCCEL_CONFIG_HOME", None)
 
 
 # ------------------------------------------------------------------------------
@@ -1604,9 +1784,12 @@ def test_reserved_file_name():
 
 # ------------------------------------------------------------------------------
 @pytest.mark.skip(reason="List concatenation not yet implemented")
-def test_concatenation(language):
+def test_concatenation(language, tmp_path):
     pyccel_test(
-        "scripts/concatenation.py", language=language, output_dtype=[int] * 15 + [str]
+        "scripts/concatenation.py",
+        language=language,
+        output_dtype=[int] * 15 + [str],
+        isolated_dir=tmp_path,
     )
 
 
@@ -1618,64 +1801,64 @@ def test_concatenation(language):
         pytest.param("c", marks=pytest.mark.c),
     ),
 )
-@pytest.mark.xdist_incompatible
-def test_class_imports(language):
-    cwd = get_abs_path("project_class_imports")
-
-    test_file = get_abs_path("project_class_imports/runtest.py")
+def test_class_imports(language, tmp_path):
+    # runtest.py unconditionally imports all three modules, so every source
+    # file must already be present (even before it is individually
+    # pyccelized) for any of the checks below to run.
+    test_file, point_mod, line_mod, square_mod = copy_to_isolated_dir(
+        tmp_path,
+        [
+            "project_class_imports/runtest.py",
+            "project_class_imports/project/basics/Point_mod.py",
+            "project_class_imports/project/basics/Line_mod.py",
+            "project_class_imports/project/shapes/Square_mod.py",
+        ],
+    )
+    cwd = test_file.parent
 
     pyth_out = get_python_output(test_file, cwd)
 
-    compile_file = get_abs_path("project_class_imports/project/basics/Point_mod.py")
-    compile_pyccel(cwd, compile_file, f"--language={language} --verbose")
+    compile_pyccel(cwd, point_mod, f"--language={language} --verbose")
 
     out1 = get_python_output(test_file, cwd)
     compare_pyth_fort_output(pyth_out, out1, float, "python")
 
-    compile_file = get_abs_path("project_class_imports/project/basics/Line_mod.py")
-    compile_pyccel(cwd, compile_file, f"--language={language} --verbose")
+    compile_pyccel(cwd, line_mod, f"--language={language} --verbose")
 
     out2 = get_python_output(test_file, cwd)
     compare_pyth_fort_output(pyth_out, out2, float, "python")
 
-    compile_file = get_abs_path("project_class_imports/project/shapes/Square_mod.py")
-    compile_pyccel(cwd, compile_file, f"--language={language} --verbose")
+    compile_pyccel(cwd, square_mod, f"--language={language} --verbose")
 
     out3 = get_python_output(test_file, cwd)
     compare_pyth_fort_output(pyth_out, out3, float, "python")
 
-    compile_file = get_abs_path("project_class_imports/runtest.py")
-    compile_pyccel(cwd, compile_file, f"--language={language} --verbose")
+    output = compile_pyccel(cwd, test_file, f"--language={language} --verbose")
 
-    lang_out = get_lang_output(test_file, language)
+    lang_out = get_lang_output(
+        get_executable_name_from_verbose_output(output, language), language
+    )
     compare_pyth_fort_output(pyth_out, lang_out, float, language)
 
 
 # ------------------------------------------------------------------------------
-def test_time_execution_flag(language):
-    test_file = get_abs_path("scripts/runtest_funcs.py")
+def test_time_execution_flag(language, tmp_path):
+    (test_file,) = copy_to_isolated_dir(tmp_path, ["scripts/runtest_funcs.py"])
 
-    cwd = get_abs_path("scripts")
+    cwd = test_file.parent
 
     cmd = [
         shutil.which("pyccel"),
         "compile",
-        test_file,
+        str(test_file),
         f"--language={language}",
         "--time-execution",
     ]
     if language == "python":
-        cmd.append(f"--output=__pyccel__{os.environ.get('PYTEST_XDIST_WORKER', '')}")
-    with subprocess.Popen(
-        cmd,
-        universal_newlines=True,
-        cwd=cwd,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-    ) as p:
-        result, _ = p.communicate()
+        cmd.append(f"--output={cwd/ '__pyccel__'}")
+    p = subprocess.run(cmd, text=True, cwd=cwd, capture_output=True, check=True)
 
-    result_lines = result.split("\n")
+    result_lines = p.stdout.split("\n")
     assert "Timers" in result_lines[0]
     assert "Total" in result_lines[-2]
     for l in result_lines[1:-1]:
@@ -1683,14 +1866,13 @@ def test_time_execution_flag(language):
 
 
 # ------------------------------------------------------------------------------
-def test_module_name_containing_conflict(language):
-    base_dir = os.path.dirname(os.path.realpath(__file__))
-    path_dir = os.path.join(base_dir, "scripts")
-    compile_pyccel(
-        path_dir, get_abs_path("scripts/endif.py"), options=f"--language={language}"
+def test_module_name_containing_conflict(language, tmp_path):
+    endif_file, test_file = copy_to_isolated_dir(
+        tmp_path,
+        ["scripts/endif.py", "scripts/runtest_badly_named_module.py"],
     )
+    compile_pyccel(tmp_path, endif_file, options=f"--language={language}")
 
-    test_file = get_abs_path("scripts/runtest_badly_named_module.py")
     out1 = get_python_output(test_file)
     out2 = get_python_output(test_file)
 
@@ -1698,11 +1880,7 @@ def test_module_name_containing_conflict(language):
 
 
 # ------------------------------------------------------------------------------
-@pytest.mark.skipif(
-    sys.platform == "win32" and not np.__version__.startswith("2."),
-    reason="Integer mismatch with numpy 1.*",
-)
-def test_stubs(language):
+def test_stubs(language, tmp_path):
     """
     This tests that a stub file is generated and ensures the stub files are
     still generated with the expected format. However it is not a good test.
@@ -1710,85 +1888,96 @@ def test_stubs(language):
     check that it can be parsed. This test should be replaced once stub files
     can be read.
     """
-    base_dir = os.path.dirname(os.path.realpath(__file__))
-    path_dir = os.path.join(base_dir, "scripts")
-
     with open(
-        get_abs_path(f"scripts/runtest_stub.{language}.pyi"), "r", encoding="utf-8"
+        Path(__file__).resolve().parent / f"scripts/runtest_stub.{language}.pyi",
+        "r",
+        encoding="utf-8",
     ) as f:
         expected_pyi = f.read()
 
-    wk_dir = get_abs_path("scripts/stub_test")
-    with FileLock(wk_dir + ".lock"):
-        compile_pyccel(
-            path_dir,
-            get_abs_path("scripts/runtest_stub.py"),
-            options=f"--language={language} --output=stub_test",
-        )
-        with open(
-            get_abs_path(
-                f"scripts/stub_test/__pyccel__{os.environ.get('PYTEST_XDIST_WORKER', '')}/runtest_stub.pyi"
-            ),
-            "r",
-            encoding="utf-8",
-        ) as f:
-            generated_pyi = f.read()
-        shutil.rmtree(wk_dir)
+    (test_file,) = copy_to_isolated_dir(tmp_path, ["scripts/runtest_stub.py"])
+
+    pyc_output = compile_pyccel(
+        tmp_path,
+        test_file,
+        options=f"--language={language} -t",
+    )
+    with open(
+        get_module_name_from_verbose_output(pyc_output, ".pyi"),
+        "r",
+        encoding="utf-8",
+    ) as f:
+        generated_pyi = f.read()
 
     assert expected_pyi == generated_pyi
 
 
 # ------------------------------------------------------------------------------
-def test_builtin_container_print(language):
+def test_builtin_container_print(language, tmp_path):
     pyccel_test(
-        "scripts/print_builtin_containers.py", output_dtype=str, language=language
+        "scripts/print_builtin_containers.py",
+        output_dtype=str,
+        language=language,
+        isolated_dir=tmp_path,
     )
 
 
 # ------------------------------------------------------------------------------
-def test_pyccel_generated_compilation_dependency(language):
+def test_pyccel_generated_compilation_dependency(language, tmp_path):
     pyccel_test(
         "scripts/runtest_pyccel_generated_compilation_dependency.py",
         dependencies=["scripts/pyccel_generated_compilation_dependency.py"],
         output_dtype=int,
         language=language,
+        isolated_dir=tmp_path,
     )
 
 
 # ------------------------------------------------------------------------------
-def test_generated_name_collision(language):
+def test_generated_name_collision(language, tmp_path):
     pyccel_test(
-        "scripts/GENERATED_NAME_COLLISION.py", output_dtype=int, language=language
+        "scripts/GENERATED_NAME_COLLISION.py",
+        output_dtype=int,
+        language=language,
+        isolated_dir=tmp_path,
     )
 
 
 # ------------------------------------------------------------------------------
-def test_array_tuple_shape(language):
-    pyccel_test("scripts/array_tuple_shape.py", output_dtype=int, language=language)
+def test_array_tuple_shape(language, tmp_path):
+    pyccel_test(
+        "scripts/array_tuple_shape.py",
+        output_dtype=int,
+        language=language,
+        isolated_dir=tmp_path,
+    )
 
 
 # ------------------------------------------------------------------------------
-def test_varargs(language):
-    pyccel_test("scripts/runtest_varargs.py", language=language)
+def test_varargs(language, tmp_path):
+    pyccel_test("scripts/runtest_varargs.py", language=language, isolated_dir=tmp_path)
 
 
 # ------------------------------------------------------------------------------
 @pytest.mark.python
-def test_varkwargs():
-    pyccel_test("scripts/runtest_varkwargs.py", language="python", output_dtype=str)
+def test_varkwargs(tmp_path):
+    pyccel_test(
+        "scripts/runtest_varkwargs.py",
+        language="python",
+        output_dtype=str,
+        isolated_dir=tmp_path,
+    )
 
 
 # ------------------------------------------------------------------------------
-@pytest.mark.xdist_incompatible
 @pytest.mark.skipif_by_language(
     os.environ.get("PYCCEL_DEFAULT_COMPILER", None) == "intel",
     reason="1671",
     language="fortran",
 )
-def test_inline_using_import(language):
-    test_file = "scripts/inlining/runtest_inline_using_import.py"
+def test_inline_using_import(language, tmp_path):
     pyccel_test(
-        test_file,
+        "scripts/inlining/runtest_inline_using_import.py",
         dependencies=[
             "scripts/inlining/my_func.py",
             "scripts/inlining/my_other_func.py",
@@ -1796,25 +1985,17 @@ def test_inline_using_import(language):
         ],
         language=language,
         output_dtype=float,
+        isolated_dir=tmp_path,
     )
-
-    if language != "python":
-        test_abspath = get_abs_path(test_file)
-
-        cwd = os.path.dirname(test_abspath)
-        pyth_out = get_python_output(test_abspath, cwd)
-        lang_out = get_lang_output(os.path.splitext(test_abspath)[0], language)
-        compare_pyth_fort_output(pyth_out, lang_out, float, language)
 
 
 # ------------------------------------------------------------------------------
-@pytest.mark.xdist_incompatible
 @pytest.mark.skipif_by_language(
     os.environ.get("PYCCEL_DEFAULT_COMPILER", None) == "intel",
     reason="1671",
     language="fortran",
 )
-def test_inline_using_import_2(language):
+def test_inline_using_import_2(language, tmp_path):
     pyccel_test(
         "scripts/inlining/runtest_inline_using_import_2.py",
         dependencies=[
@@ -1824,17 +2005,17 @@ def test_inline_using_import_2(language):
         ],
         language=language,
         output_dtype=float,
+        isolated_dir=tmp_path,
     )
 
 
 # ------------------------------------------------------------------------------
-@pytest.mark.xdist_incompatible
 @pytest.mark.skipif_by_language(
     os.environ.get("PYCCEL_DEFAULT_COMPILER", None) == "intel",
     reason="1671",
     language="fortran",
 )
-def test_inline_using_named_import(language):
+def test_inline_using_named_import(language, tmp_path):
     pyccel_test(
         "scripts/inlining/runtest_inline_using_named_import.py",
         dependencies=[
@@ -1844,72 +2025,85 @@ def test_inline_using_named_import(language):
         ],
         language=language,
         output_dtype=float,
+        isolated_dir=tmp_path,
     )
 
 
 # ------------------------------------------------------------------------------
-def test_classes_array_property(language):
+def test_classes_array_property(language, tmp_path):
     pyccel_test(
         "scripts/classes/runtest_classes_array_property.py",
         dependencies=["scripts/classes/classes_array_property.py"],
         language=language,
         output_dtype=float,
+        isolated_dir=tmp_path,
     )
 
 
 # ------------------------------------------------------------------------------
-@pytest.mark.xdist_incompatible
-def test_classes_pointer_import(language):
-    cwd = get_abs_path("scripts/classes")
-    test_file = get_abs_path("scripts/classes/runtest_class_pointer_2.py")
+def test_classes_pointer_import(language, tmp_path):
+    test_file, dependency = copy_to_isolated_dir(
+        tmp_path,
+        [
+            "scripts/classes/runtest_class_pointer_2.py",
+            "scripts/classes/class_pointer_2.py",
+        ],
+    )
+    cwd = test_file.parent
 
     pyth_out = get_python_output(test_file, cwd)
 
-    dependency = get_abs_path("scripts/classes/class_pointer_2.py")
     compile_pyccel(cwd, dependency, f"--language={language}")
 
     pyth_interface_out = get_python_output(test_file, cwd)
     assert pyth_out == pyth_interface_out
 
-    compile_pyccel(cwd, test_file, f"--language={language}")
+    output = compile_pyccel(cwd, test_file, f"--language={language}")
 
-    lang_out = get_lang_output(test_file, language)
+    lang_out = get_lang_output(
+        get_executable_name_from_verbose_output(output, language), language
+    )
     compare_pyth_fort_output(pyth_out, lang_out, float, language)
 
 
 # ------------------------------------------------------------------------------
-def test_functional_statements(language):
+def test_functional_statements(language, tmp_path):
     pyccel_test(
-        "scripts/functional_statements.py", output_dtype=[int] * 9, language=language
+        "scripts/functional_statements.py",
+        output_dtype=[int] * 9,
+        language=language,
+        isolated_dir=tmp_path,
     )
 
 
 # ------------------------------------------------------------------------------
-def test_complex_numbers(language):
+def test_complex_numbers(language, tmp_path):
     pyccel_test(
-        "scripts/complex_numbers.py", output_dtype=[complex] * 6, language=language
+        "scripts/complex_numbers.py",
+        output_dtype=[complex] * 6,
+        language=language,
+        isolated_dir=tmp_path,
     )
 
 
 # ------------------------------------------------------------------------------
-def test_line_annotation_plugin(language):
-    test_file = get_abs_path("scripts/funcs.py")
-    folder = os.path.dirname(test_file)
+def test_line_annotation_plugin(language, tmp_path):
+    (test_file,) = copy_to_isolated_dir(tmp_path, ["scripts/funcs.py"])
+    folder = test_file.parent
 
     # Choose an output folder that cannot contain translations of other files
-    output_folder = os.path.join(folder, "__pyccel__la__")
+    output_folder = folder / "__pyccel__la__"
 
     pyccel_commands = (
-        "-t --line_annotation --language=" + language + f" --output={output_folder}"
+        f"-t --line_annotation --language={language} --output={output_folder}"
     )
 
     shutil.rmtree(output_folder, ignore_errors=True)
 
-    compile_pyccel(folder, "funcs.py", pyccel_commands)
+    compile_pyccel(folder, test_file, pyccel_commands)
 
-    for fi in os.listdir(output_folder):
-        _, ext = os.path.splitext(fi)
-        if ext in (".c", ".f90", ".py"):
-            with open(os.path.join(output_folder, fi), "r", encoding="utf-8") as file:
+    for fi in output_folder.iterdir():
+        if fi.suffix in (".c", ".f90", ".py"):
+            with open(fi, "r", encoding="utf-8") as file:
                 code = file.read()
-            assert test_file in code
+            assert str(test_file) in code

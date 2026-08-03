@@ -45,7 +45,6 @@ def get_files_from_folder(foldername):
 
 
 @pytest.mark.language_agnostic
-@pytest.mark.xdist_incompatible
 @pytest.mark.parametrize("f", get_files_from_folder("semantic"))
 def test_semantic_warnings(f):
 
