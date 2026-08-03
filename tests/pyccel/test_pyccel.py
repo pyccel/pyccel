@@ -40,7 +40,7 @@ def copy_to_isolated_dir(isolated_dir, rel_paths):
         The directory (exclusive to the current test) into which files
         should be copied.
 
-    rel_paths : list of str/Path
+    rel_paths : list[str | Path]
         The paths of the files to copy, relative to the folder containing
         this file.
 
