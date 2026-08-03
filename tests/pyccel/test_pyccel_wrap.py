@@ -86,9 +86,9 @@ def check_pyccel_wrap_and_call_translation(
     extra_flags : Iterable[str]
         Any extra flags to be passed to the wrap command.
     isolated_dir : Path
-                The test-exclusive directory (typically pytest's
-                `tmp_path` fixture) into which test files are copied
-                and pyccel is run
+        The test-exclusive directory (typically pytest's
+        `tmp_path` fixture) into which test files are copied
+        and pyccel is run
 
     Results
     -------
