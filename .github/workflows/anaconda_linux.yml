@@ -74,7 +74,7 @@ jobs:
           shell_cmd: "bash -l {0}"
       - name: Pytest serial tests
         if: steps.duplicate_check.outputs.should_skip != 'true'
-        id: f_c_pytest
+        id: serial_pytest
         timeout-minutes: 60
         uses: ./.github/actions/pytest_run
         with:
