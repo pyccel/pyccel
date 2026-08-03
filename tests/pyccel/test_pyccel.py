@@ -46,7 +46,7 @@ def copy_to_isolated_dir(isolated_dir, rel_paths):
 
     Returns
     -------
-    list of Path
+    list[Path]
         The absolute paths of the copies, inside `isolated_dir`, in the same
         order as `rel_paths`.
     """
