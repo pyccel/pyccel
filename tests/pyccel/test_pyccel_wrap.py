@@ -8,7 +8,7 @@ import pytest
 from test_pyccel import (
     compare_pyth_fort_output,
     copy_to_isolated_dir,
-    parse_generated_file,
+    get_module_name_from_verbose_output,
 )
 
 from pyccel.utilities.introspect import get_compiler_info
@@ -264,5 +264,5 @@ def test_convert_only(language, tmp_path):
         capture_output=True,
     )
     assert "Time" in p.stdout
-    expected_file = parse_generated_file(p.stdout, low_level_suffix[language])
+    expected_file = get_module_name_from_verbose_output(p.stdout, low_level_suffix[language])
     assert expected_file.exists()
