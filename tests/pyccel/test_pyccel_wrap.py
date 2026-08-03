@@ -3,10 +3,13 @@ import os
 import shutil
 import subprocess
 import sys
-from pathlib import Path
 
 import pytest
-from test_pyccel import compare_pyth_fort_output
+from test_pyccel import (
+    compare_pyth_fort_output,
+    copy_to_isolated_dir,
+    get_module_name_from_verbose_output,
+)
 
 from pyccel.utilities.introspect import get_compiler_info
 
@@ -66,7 +69,7 @@ def compile_low_level(stem, input_folder, output_folder, cwd, language):
 
 
 def check_pyccel_wrap_and_call_translation(
-    low_level_stem, python_stem, language, extra_flags=()
+    low_level_stem, python_stem, language, extra_flags=(), *, isolated_dir
 ):
     """
     Check that pyccel wrap allows a Python file to call a low-level file and that
@@ -82,6 +85,10 @@ def check_pyccel_wrap_and_call_translation(
         The language we are compiling from.
     extra_flags : Iterable[str]
         Any extra flags to be passed to the wrap command.
+    isolated_dir : Path
+        The test-exclusive directory (typically pytest's
+        `tmp_path` fixture) into which test files are copied
+        and pyccel is run
 
     Results
     -------
@@ -92,12 +99,20 @@ def check_pyccel_wrap_and_call_translation(
         The output of running the low-level file obtained by translating
         the Python file which calls the low-level code.
     """
-    cwd = Path(__file__).parent / "wrap_scripts" / f"{language}_tests"
+    folder = f"wrap_scripts/{language}_tests"
+    files = [
+        f"{folder}/{python_stem}.py",
+        f"{folder}/{low_level_stem}.pyi",
+        f"{folder}/{low_level_stem}{low_level_suffix[language]}",
+    ]
+    if language == "c":
+        files.append(f"{folder}/{low_level_stem}.h")
+    python_file, low_level_interface, *_ = copy_to_isolated_dir(isolated_dir, files)
+
+    cwd = python_file.parent
 
     pyccel_dirname = "__pyccel__mod__"
     os.makedirs(cwd / pyccel_dirname, exist_ok=True)
-
-    python_file = cwd / f"{python_stem}.py"
 
     pyccel_flags = [f"--language={language}", *extra_flags]
     if os.environ.get("PYCCEL_ERROR_MODE", "user") == "developer":
@@ -106,7 +121,7 @@ def check_pyccel_wrap_and_call_translation(
 
     compile_low_level(low_level_stem, cwd, cwd, cwd / pyccel_dirname, language)
     subprocess.run(
-        [shutil.which("pyccel"), "wrap", cwd / f"{low_level_stem}.pyi", *pyccel_flags],
+        [shutil.which("pyccel"), "wrap", low_level_interface, *pyccel_flags],
         check=True,
     )
     py_run = subprocess.run(
@@ -134,55 +149,57 @@ def check_pyccel_wrap_and_call_translation(
 # --------------------------------------------------------------------------------------------------
 #                                  Tests
 # --------------------------------------------------------------------------------------------------
-@pytest.mark.xdist_incompatible
-def test_function(language):
+def test_function(language, tmp_path):
     py_out, l_out = check_pyccel_wrap_and_call_translation(
-        "functions", "runtest_functions", language
+        "functions", "runtest_functions", language, isolated_dir=tmp_path
     )
     compare_pyth_fort_output(py_out, l_out, int, language)
 
 
-def test_class_accessors(language):
+def test_class_accessors(language, tmp_path):
     py_out, l_out = check_pyccel_wrap_and_call_translation(
-        "class_property", "runtest_class_property", language
+        "class_property", "runtest_class_property", language, isolated_dir=tmp_path
     )
     compare_pyth_fort_output(py_out, l_out, int, language)
 
 
-def test_class_renaming(language):
+def test_class_renaming(language, tmp_path):
     py_out, l_out = check_pyccel_wrap_and_call_translation(
-        "class_renaming", "runtest_class_renaming", language
+        "class_renaming", "runtest_class_renaming", language, isolated_dir=tmp_path
     )
     compare_pyth_fort_output(py_out, l_out, int, language)
 
 
 @pytest.mark.fortran
-def test_array_methods():
+def test_array_methods(tmp_path):
     # C is not tested as compiling array dependencies by hand is harder than necessary for the test
     py_out, l_out = check_pyccel_wrap_and_call_translation(
-        "array_methods", "runtest_array_methods", "fortran"
+        "array_methods", "runtest_array_methods", "fortran", isolated_dir=tmp_path
     )
     compare_pyth_fort_output(py_out, l_out, float, language)
 
 
-def test_overload_methods(language):
+def test_overload_methods(language, tmp_path):
     py_out, l_out = check_pyccel_wrap_and_call_translation(
-        "class_overloaded_methods", "runtest_class_overloaded_methods", language
+        "class_overloaded_methods",
+        "runtest_class_overloaded_methods",
+        language,
+        isolated_dir=tmp_path,
     )
     compare_pyth_fort_output(py_out, l_out, [int, float], language)
 
 
-def test_class_no_init(language):
+def test_class_no_init(language, tmp_path):
     py_out, l_out = check_pyccel_wrap_and_call_translation(
-        "class_no_init", "runtest_class_no_init", language
+        "class_no_init", "runtest_class_no_init", language, isolated_dir=tmp_path
     )
     compare_pyth_fort_output(py_out, l_out, int, language)
 
 
 @pytest.mark.fortran
-def test_class_final_fortran_keyword():
+def test_class_final_fortran_keyword(tmp_path):
     py_out, _ = check_pyccel_wrap_and_call_translation(
-        "final_destroy", "runtest_final_destroy", "fortran"
+        "final_destroy", "runtest_final_destroy", "fortran", isolated_dir=tmp_path
     )
     assert "c allocated, cleaning up" in py_out
 
@@ -191,7 +208,7 @@ def test_class_final_fortran_keyword():
 
     valgrind = shutil.which("valgrind")
     if valgrind:
-        cwd = Path(__file__).parent / "wrap_scripts" / "fortran_tests"
+        cwd = tmp_path / "wrap_scripts" / "fortran_tests"
         subprocess.run(
             [valgrind, sys.executable, cwd / "runtest_final_destroy.py"],
             cwd=cwd,
@@ -206,23 +223,29 @@ def test_class_final_fortran_keyword():
 # Flag tests
 
 
-@pytest.mark.xdist_incompatible
 @pytest.mark.parametrize(
     "extra_flag",
     ["--mpi", "--openmp", "--time-execution", "--verbose", "--developer-mode"],
 )
-def test_accelerator_flags(language, extra_flag):
+def test_accelerator_flags(language, extra_flag, tmp_path):
     py_out, l_out = check_pyccel_wrap_and_call_translation(
-        "functions", "runtest_functions", language, (extra_flag,)
+        "functions", "runtest_functions", language, (extra_flag,), isolated_dir=tmp_path
     )
     compare_pyth_fort_output(py_out, l_out, int, language)
 
 
-@pytest.mark.xdist_incompatible
-def test_convert_only(language):
-    cwd = Path(__file__).parent / "wrap_scripts" / f"{language}_tests"
+def test_convert_only(language, tmp_path):
+    folder = f"wrap_scripts/{language}_tests"
+    files = [
+        f"{folder}/functions.pyi",
+        f"{folder}/functions{low_level_suffix[language]}",
+    ]
+    if language == "c":
+        files.append(f"{folder}/functions.h")
+    low_level_interface, *_ = copy_to_isolated_dir(tmp_path, files)
 
-    pyccel_dirname = "__pyccel__" + os.environ.get("PYTEST_XDIST_WORKER", "")
+    cwd = tmp_path / "wrap_scripts" / f"{language}_tests"
+
     pyccel_mod_dirname = "__pyccel__mod__"
     os.makedirs(cwd / pyccel_mod_dirname, exist_ok=True)
 
@@ -230,13 +253,18 @@ def test_convert_only(language):
     if os.environ.get("PYCCEL_ERROR_MODE", "user") == "developer":
         pyccel_flags.append("--developer-mode")
         pyccel_flags.append("-vv")
+    else:
+        pyccel_flags.append("-v")
 
     compile_low_level("functions", cwd, cwd, cwd / pyccel_mod_dirname, language)
     p = subprocess.run(
-        [shutil.which("pyccel"), "wrap", cwd / "functions.pyi", *pyccel_flags],
+        [shutil.which("pyccel"), "wrap", low_level_interface, *pyccel_flags],
         check=True,
         text=True,
         capture_output=True,
     )
     assert "Time" in p.stdout
-    assert (cwd / pyccel_dirname / "functions_wrapper.c").exists()
+    expected_file = get_module_name_from_verbose_output(
+        p.stdout, low_level_suffix[language]
+    )
+    assert expected_file.exists()
