@@ -264,5 +264,7 @@ def test_convert_only(language, tmp_path):
         capture_output=True,
     )
     assert "Time" in p.stdout
-    expected_file = get_module_name_from_verbose_output(p.stdout, low_level_suffix[language])
+    expected_file = get_module_name_from_verbose_output(
+        p.stdout, low_level_suffix[language]
+    )
     assert expected_file.exists()
