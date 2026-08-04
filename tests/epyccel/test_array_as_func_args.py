@@ -35,8 +35,8 @@ def test_array_int_1d_scalar_add(epyc_array_as_func_args_mod):
         x2 = np.copy(x1)
         a = randint(np.iinfo(t).max / 2, dtype=t)
 
-        f1(x1, a, size)
-        f2(x2, a, size)
+        f1(x1, a)
+        f2(x2, a)
 
         assert np.array_equal(x1, x2)
 
@@ -52,8 +52,8 @@ def test_array_float_1d_scalar_add(epyc_array_as_func_args_mod):
         x2 = np.copy(x1)
         a = uniform(np.finfo(t).max / 2, size=1).astype(t)[0]
 
-        f1(x1, a, size)
-        f2(x2, a, size)
+        f1(x1, a)
+        f2(x2, a)
 
         assert np.array_equal(x1, x2)
 
@@ -75,8 +75,8 @@ def test_array_complex_1d_scalar_add(epyc_array_as_func_args_mod):
             + uniform(np.finfo(t).max / 4, size=1).astype(t) * 1j
         )[0]
 
-        f1(x1, a, size)
-        f2(x2, a, size)
+        f1(x1, a)
+        f2(x2, a)
 
         assert np.array_equal(x1, x2)
 
@@ -93,8 +93,8 @@ def test_array_int_2d_scalar_add(epyc_array_as_func_args_mod):
         x2 = np.copy(x1)
         a = randint(np.iinfo(t).max / 2, dtype=t)
 
-        f1(x1, a, d1, d2)
-        f2(x2, a, d1, d2)
+        f1(x1, a)
+        f2(x2, a)
 
         assert np.array_equal(x1, x2)
 
@@ -111,8 +111,8 @@ def test_array_float_2d_scalar_add(epyc_array_as_func_args_mod):
         x2 = np.copy(x1)
         a = uniform(np.finfo(t).max / 2, size=1).astype(t)[0]
 
-        f1(x1, a, d1, d2)
-        f2(x2, a, d1, d2)
+        f1(x1, a)
+        f2(x2, a)
 
         assert np.array_equal(x1, x2)
 
@@ -135,8 +135,8 @@ def test_array_complex_2d_scalar_add(epyc_array_as_func_args_mod):
             + uniform(np.finfo(t).max / 4, size=1).astype(t) * 1j
         )[0]
 
-        f1(x1, a, d1, d2)
-        f2(x2, a, d1, d2)
+        f1(x1, a)
+        f2(x2, a)
 
         assert np.array_equal(x1, x2)
 
