@@ -354,7 +354,7 @@ def test_wrong_unknown_argument_type_in_interface(epyc_epyccel_functions_mod):
 
     test_arg = 3.5 + 1j
     with pytest.raises(TypeError) as err:
-        epyc_f(test_arg, 4.5)
+        epyc_f(test_arg, 10)
     assert "templated_arg" in str(err.value)
     assert str(type(test_arg)) in str(err.value)
 
