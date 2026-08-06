@@ -108,7 +108,14 @@ def test_functional_for_2d_dependant_range(epyc_functionals_mod):
         pytest.param(
             "c",
             marks=[
-                pytest.mark.skip(reason="lists of tuples are not yes supported"),
+               pytest.mark.skip(reason="lists of tuples are not yet supported"),
+               pytest.mark.fortran,
+           ],
+       ),
+       pytest.param(
+           "c",
+           marks=[
+               pytest.mark.skip(reason="lists of tuples are not yet supported"),
                 pytest.mark.c,
             ],
         ),
