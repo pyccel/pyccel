@@ -869,7 +869,7 @@ def multiple_2d_stack_array_2():
 # ==============================================================================
 # TEST: Array with ndmin argument
 # ==============================================================================
-# C/F Template makes interface ambiguous
+# C/F ordering in template makes interface ambiguous in Fortran
 # def array_ndmin_1(x: T):
 #    y = np.array(x, ndmin=1)
 #    return y

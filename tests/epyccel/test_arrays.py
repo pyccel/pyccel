@@ -4136,7 +4136,7 @@ def test_array_view_steps_F_2D_3(epyc_arrays_mod):
         pytest.param(
             "fortran",
             marks=[
-                pytest.mark.skip(reason=("Template makes interface ambiguous")),
+                pytest.mark.skip(reason=("C/F ordering in template makes interface ambiguous")),
                 pytest.mark.fortran,
             ],
         ),
@@ -4180,7 +4180,7 @@ def test_array_ndmin_1(language):
         pytest.param(
             "fortran",
             marks=[
-                pytest.mark.skip(reason=("Template makes interface ambiguous")),
+                pytest.mark.skip(reason=("C/F ordering in template makes interface ambiguous")),
                 pytest.mark.fortran,
             ],
         ),
@@ -4224,7 +4224,7 @@ def test_array_ndmin_2(language):
         pytest.param(
             "fortran",
             marks=[
-                pytest.mark.skip(reason=("Template makes interface ambiguous")),
+                pytest.mark.skip(reason=("C/F ordering in template makes interface ambiguous")),
                 pytest.mark.fortran,
             ],
         ),
@@ -4268,7 +4268,7 @@ def test_array_ndmin_4(language):
         pytest.param(
             "fortran",
             marks=[
-                pytest.mark.skip(reason=("Template makes interface ambiguous")),
+                pytest.mark.skip(reason=("C/F ordering in template makes interface ambiguous")),
                 pytest.mark.fortran,
             ],
         ),
