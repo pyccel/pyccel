@@ -51,9 +51,9 @@ def test_idiv_gt_add(epyc_compare_expressions_mod):
     np.equal(f(16, 3, 5), epyc_f(16, 3, 5))
 
 
-def test_in_range(epyc_compare_expressions_mod):
-    f = compare_expressions.in_range
-    epyc_f = epyc_compare_expressions_mod.in_range
+def test_in_interval(epyc_compare_expressions_mod):
+    f = compare_expressions.in_interval
+    epyc_f = epyc_compare_expressions_mod.in_interval
     # True
     np.equal(f(0.0, 1.0, 2.0), epyc_f(0.0, 1.0, 2.0))
     np.equal(f(-2.0, -1.0, 2.0), epyc_f(-2.0, -1.0, 2.0))
