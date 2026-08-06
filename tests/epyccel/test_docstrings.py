@@ -59,7 +59,7 @@ def test_property_docstring(epyc_docstrings_mod):
 
 print(A.__doc__, B.__doc__)
 
-    python_doc, pyccel_doc = pad_docstrings(MyA.__doc__, B.__doc__)
+    python_doc, pyccel_doc = pad_docstrings(A.__doc__, B.__doc__)
     assert python_doc == pyccel_doc
     python_doc, pyccel_doc = pad_docstrings(MyA.x.__doc__, B.x.__doc__)
     assert python_doc == pyccel_doc
