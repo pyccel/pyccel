@@ -10,7 +10,7 @@ def p_lose():
     return lose
 
 
-def p_func(x: int):
+def func_no_return_1(x: int):
     x *= 2
 
 
@@ -162,11 +162,11 @@ def decorator_f22(a: "complex128"):
     return b
 
 
-def square(a: int | float):  # pylint: disable=unsupported-binary-operation
+def union_type(a: int | float):
     return a * a
 
 
-def get_2() -> int:
+def return_annotation() -> int:
     my_var: int = 2
     return my_var
 
@@ -191,7 +191,7 @@ def container_interface(a: Final[T_f]):
     return len(a)
 
 
-def lambda_f(a: int):
+def lambda_1(a: int):
     f1 = lambda x: x**2 + 1  # pylint: disable=unnecessary-lambda-assignment
     g1 = lambda x: f1(x) ** 2 + 1  # pylint: disable=unnecessary-lambda-assignment
     return g1(a)
@@ -200,3 +200,14 @@ def lambda_f(a: int):
 def lambda_2(a: int):
     f2 = lambda x, y: x**2 + y**2 + 1  # pylint: disable=unnecessary-lambda-assignment
     return f2(a, 3 * a)
+
+
+def add_2(a: float):
+    return a + 2
+
+
+def times_3(a: "float|complex"):
+    b = 1.0
+    b = add_2(b)
+    a *= b
+    return a

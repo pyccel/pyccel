@@ -47,8 +47,8 @@ def test_func_no_args_2(epyc_epyccel_functions_mod):
 def test_func_no_return_1(epyc_epyccel_functions_mod):
     """Test function with args and no return"""
 
-    p_func = epyccel_functions.p_func
-    c_func = epyc_epyccel_functions_mod.p_func
+    p_func = epyccel_functions.func_no_return_1
+    c_func = epyc_epyccel_functions_mod.func_no_return_1
     x = np.random.randint(100)
     assert c_func(x) == p_func(x)
     # Test type return should be NoneType
@@ -216,20 +216,20 @@ def test_arguments_f10(epyc_epyccel_functions_mod):
     assert np.array_equal(x, x_expected)
 
 
-def test_multiple_returns_f11(epyc_epyccel_functions_mod):
+def test_ackermann(epyc_epyccel_functions_mod):
     ackermann = epyccel_functions.ackermann
     f = epyc_epyccel_functions_mod.ackermann
     assert f(2, 3) == ackermann(2, 3)
 
 
-def test_multiple_returns_f12(epyc_epyccel_functions_mod):
+def test_non_negative(epyc_epyccel_functions_mod):
     non_negative = epyccel_functions.non_negative
     f = epyc_epyccel_functions_mod.non_negative
     assert f(2) == non_negative(2)
     assert f(-1) == non_negative(-1)
 
 
-def test_multiple_returns_f13(epyc_epyccel_functions_mod):
+def test_get_min(epyc_epyccel_functions_mod):
     get_min = epyccel_functions.get_min
     f = epyc_epyccel_functions_mod.get_min
     assert f(2, 3) == get_min(2, 3)
@@ -295,8 +295,8 @@ def test_decorator_f22(epyc_epyccel_functions_mod):
 
 
 def test_union_type(epyc_epyccel_functions_mod):
-    square = epyccel_functions.square
-    f = epyc_epyccel_functions_mod.square
+    square = epyccel_functions.union_type
+    f = epyc_epyccel_functions_mod.union_type
     x = np.random.randint(40)
     y = np.random.uniform()
 
@@ -307,8 +307,8 @@ def test_union_type(epyc_epyccel_functions_mod):
 
 
 def test_return_annotation(epyc_epyccel_functions_mod):
-    get_2 = epyccel_functions.get_2
-    f = epyc_epyccel_functions_mod.get_2
+    get_2 = epyccel_functions.return_annotation
+    f = epyc_epyccel_functions_mod.return_annotation
     assert f() == get_2()
 
 
@@ -360,28 +360,19 @@ def test_wrong_unknown_argument_type_in_interface(epyc_epyccel_functions_mod):
 
 
 @pytest.mark.skipif_by_language(True, language="python", reason="no error from Python")
-def test_wrong_argument_combination_in_interface(epyc_epyccel_functions_mod, language):
+def test_wrong_argument_combination_in_interface(epyc_epyccel_functions_mod):
     epyc_f = epyc_epyccel_functions_mod.wrong_argument_combination_in_interface
 
     with pytest.raises(TypeError):
         epyc_f(3.5, 4)
 
 
-@pytest.mark.parametrize(
-    "language",
-    (
-        pytest.param("fortran", marks=pytest.mark.fortran),
-        pytest.param("c", marks=pytest.mark.c),
-    ),
-)
-def test_argument_checks_with_interfaces(language):
-    from modules import Module_12 as mod
-
-    modnew = epyccel(mod, language=language)
+@pytest.mark.skipif_by_language(True, language="python", reason="no error from Python")
+def test_argument_checks_with_interfaces(epyc_epyccel_functions_mod):
     with pytest.raises(TypeError):
-        modnew.times_3(1)
+        epyc_epyccel_functions_mod.times_3(1)
     with pytest.raises(TypeError):
-        modnew.add_2(1)
+        epyc_epyccel_functions_mod.add_2(1)
 
 
 def test_container_interface(epyc_epyccel_functions_mod):
@@ -393,8 +384,8 @@ def test_container_interface(epyc_epyccel_functions_mod):
 
 
 def test_lambda(epyc_epyccel_functions_mod):
-    f = epyccel_functions.lambda_f
-    epyc_f = epyc_epyccel_functions_mod.lambda_f
+    f = epyccel_functions.lambda_1
+    epyc_f = epyc_epyccel_functions_mod.lambda_1
     val = randint(20)
     assert f(val) == epyc_f(val)
     assert isinstance(epyc_f(val), type(epyc_f(val)))
@@ -408,7 +399,7 @@ def test_lambda_2(epyc_epyccel_functions_mod):
     assert isinstance(epyc_f(val), type(epyc_f(val)))
 
 
-@pytest.mark.language_agnostic
+@pytest.mark.python
 def test_argument_types():
     def f(a: int, /, b: int, *args: int, c: int, **kwargs: int):
         my_sum = sum(v for v in kwargs.values())
