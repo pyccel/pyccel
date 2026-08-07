@@ -24,7 +24,7 @@ def f4(x: "bool" = True):
         return 2
 
 
-def f5_f5(x: "complex" = 1j):
+def f5(x: "complex" = 1j):
     y = x - 1
     return y
 

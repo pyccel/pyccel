@@ -77,8 +77,8 @@ def test_f4(epyc_epyccel_default_args_mod):
 
 # ------------------------------------------------------------------------------
 def test_f5(epyc_epyccel_default_args_mod):
-    f5 = epyccel_default_args.f5_f5
-    f = epyc_epyccel_default_args_mod.f5_f5
+    f5 = epyccel_default_args.f5
+    f = epyc_epyccel_default_args_mod.f5
 
     # ...
     assert f(2.9 + 3j) == f5(2.9 + 3j)
