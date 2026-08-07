@@ -1111,10 +1111,6 @@ class SyntaxParser(BasicParser):
 
         arguments = self._visit(stmt.args)
 
-        is_pure = False
-        is_elemental = False
-        is_private = False
-        is_inline = False
         docstring = None
 
         decorators = self._visit(stmt.decorator_list)
@@ -1179,8 +1175,7 @@ class SyntaxParser(BasicParser):
 
         self.exit_function_scope()
 
-        cls = InlineFunctionDef if is_inline else FunctionDef
-        func = cls(
+        return FunctionDef(
             name,
             arguments,
             body,
@@ -1191,8 +1186,6 @@ class SyntaxParser(BasicParser):
             docstring=docstring,
             scope=scope,
         )
-
-        return func
 
     def _visit_ClassDef(self, stmt):
 
@@ -1585,9 +1578,7 @@ class SyntaxParser(BasicParser):
             self.exit_function_scope()
 
             imports = [i for i in body if isinstance(i, Import)]
-            functions = [
-                l for l in body if isinstance(l, FunctionDef) and not l.is_inline
-            ]
+            functions = [l for l in body if isinstance(l, FunctionDef)]
             classes = [l for l in body if isinstance(l, ClassDef)]
             if classes:
                 errors.report(
@@ -1595,7 +1586,7 @@ class SyntaxParser(BasicParser):
                     symbol=stmt,
                     severity="error",
                 )
-            if any(not f.is_inline for f in functions):
+            if functions:
                 errors.report(
                     "Functions should be declared in the module not in the program body",
                     symbol=stmt,
