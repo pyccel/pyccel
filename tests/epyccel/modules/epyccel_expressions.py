@@ -1,7 +1,7 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 
 
-def swp(a: int, b: int):
+def swap_basic(a: int, b: int):
     a, b = (b, a)
     return a, b
 

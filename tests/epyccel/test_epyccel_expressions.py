@@ -13,8 +13,8 @@ def epyc_epyccel_expressions_mod(language):
 
 
 def test_swap_basic(epyc_epyccel_expressions_mod):
-    swp = epyccel_expressions.swp
-    f = epyc_epyccel_expressions_mod.swp
+    swp = epyccel_expressions.swap_basic
+    f = epyc_epyccel_expressions_mod.swap_basic
     assert f(2, 4) == swp(2, 4)
     assert f(-2, 4) == swp(-2, 4)
     assert f(4, 100) == swp(4, 100)
