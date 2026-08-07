@@ -103,8 +103,8 @@ def test_multi_type_swap(epyc_epyccel_expressions_mod):
 
 
 def test_tuple_assign(epyc_epyccel_expressions_mod):
-    tup_assign = epyccel_expressions.tup_assign
-    f = epyc_epyccel_expressions_mod.tup_assign
+    tup_assign = epyccel_expressions.tuple_assign
+    f = epyc_epyccel_expressions_mod.tuple_assign
     assert f(2, 4) == tup_assign(2, 4)
     assert f(-2, 4) == tup_assign(-2, 4)
     assert f(4, 100) == tup_assign(4, 100)

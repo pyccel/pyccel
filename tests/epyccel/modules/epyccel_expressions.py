@@ -43,7 +43,7 @@ def multi_type_swap(a: float, b: int, c: float, d: int):
     return a, b, c, d
 
 
-def tup_assign(a: int, b: int):
+def tuple_assign(a: int, b: int):
     c, d = a, a + b
     return c, d
 
