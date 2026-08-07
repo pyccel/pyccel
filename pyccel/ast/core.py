@@ -2584,41 +2584,6 @@ class FunctionDef(ScopedAstNode):
         return self._is_recursive
 
     @property
-    def is_pure(self):
-        """Returns True if the function is marked as pure and False otherwise
-        Pure functions must not have any side effects.
-        In other words this means that the result must be the same no matter
-        how many times the function is called
-        e.g:
-        >>> a = f()
-        >>> a = f()
-
-        gives the same result as
-        >>> a = f()
-
-        This is notably not true for I/O functions
-        """
-        return self._is_pure
-
-    @property
-    def is_elemental(self):
-        """returns True if the function is marked as elemental and
-        False otherwise
-        An elemental function is a function with a single scalar operator
-        and a scalar return value which can also be called on an array.
-        When it is called on an array it returns the result of the function
-        called elementwise on the array"""
-        return self._is_elemental
-
-    @property
-    def is_private(self):
-        """True if the function should not be exposed to
-        other modules. This includes the wrapper module and
-        means that the function cannot be used in an import
-        or exposed to python"""
-        return self._is_private
-
-    @property
     def is_header(self):
         """True if the implementation of the function body
         is not provided False otherwise"""
@@ -2654,6 +2619,7 @@ class FunctionDef(ScopedAstNode):
     @property
     def is_inline(self):
         """True if the function should be printed inline"""
+        assert self.is_semantic
         return False
 
     @property
@@ -3131,6 +3097,15 @@ class Interface(PyccelAstNode):
         The docstring of the interface function.
         """
         return self._functions[0].docstring
+
+    @property
+    def decorators(self):
+        """
+        The docstring of the function.
+
+        The docstring of the interface function.
+        """
+        return self._functions[0].decorators
 
     @property
     def is_semantic(self):
