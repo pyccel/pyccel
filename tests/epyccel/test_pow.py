@@ -1,6 +1,6 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 import pytest
-from modules import pow
+from modules import pow as pow_mod
 from numpy import isclose
 from numpy.random import rand, randint, uniform
 
@@ -10,11 +10,11 @@ from tolerances import ATOL, RTOL, min_abs_float
 
 @pytest.fixture(scope="module")
 def epyc_pow_mod(language):
-    return epyccel_module_with_fallback(pow, language)
+    return epyccel_module_with_fallback(pow_mod, language)
 
 
 def test_pow_int_int(epyc_pow_mod):
-    f_call = pow.f_call
+    f_call = pow_mod.f_call
     f = epyc_pow_mod.f_call
     x = randint(50)
     y = randint(5)
@@ -27,7 +27,7 @@ def test_pow_int_int(epyc_pow_mod):
 
 
 def test_pow_real_real(epyc_pow_mod):
-    pow_r_r = pow.pow_r_r
+    pow_r_r = pow_mod.pow_r_r
     f = epyc_pow_mod.pow_r_r
     x = uniform(low=min_abs_float, high=50)
     y = uniform(high=5)
@@ -38,7 +38,7 @@ def test_pow_real_real(epyc_pow_mod):
 
 
 def test_pow_real_int(epyc_pow_mod):
-    pow_r_i = pow.pow_r_i
+    pow_r_i = pow_mod.pow_r_i
     f = epyc_pow_mod.pow_r_i
     x = uniform(low=min_abs_float, high=50)
     y = randint(5)
@@ -49,7 +49,7 @@ def test_pow_real_int(epyc_pow_mod):
 
 
 def test_pow_int_real(epyc_pow_mod):
-    pow_i_r = pow.pow_i_r
+    pow_i_r = pow_mod.pow_i_r
     f = epyc_pow_mod.pow_i_r
     x = randint(40)
     y = uniform()
@@ -59,7 +59,7 @@ def test_pow_int_real(epyc_pow_mod):
 
 
 def test_pow_special_cases(epyc_pow_mod):
-    pow_sp = pow.pow_sp
+    pow_sp = pow_mod.pow_sp
     f = epyc_pow_mod.pow_sp
     e = uniform(high=1e6)
     assert isclose(f(0.0, e), pow_sp(0.0, e), rtol=RTOL, atol=ATOL)
@@ -70,7 +70,7 @@ def test_pow_special_cases(epyc_pow_mod):
 
 
 def test_pow_c_c(epyc_pow_mod):
-    pow_c_c = pow.pow_c_c
+    pow_c_c = pow_mod.pow_c_c
     f = epyc_pow_mod.pow_c_c
     b = complex(rand(), rand())
     e = complex(rand(), rand())
@@ -81,7 +81,7 @@ def test_pow_c_c(epyc_pow_mod):
 
 
 def test_pow_c_i(epyc_pow_mod):
-    pow_c_i = pow.pow_c_i
+    pow_c_i = pow_mod.pow_c_i
     f = epyc_pow_mod.pow_c_i
     b = complex(rand(), rand())
     e = randint(10)
@@ -92,7 +92,7 @@ def test_pow_c_i(epyc_pow_mod):
 
 
 def test_pow_c_r(epyc_pow_mod):
-    pow_c_r = pow.pow_c_r
+    pow_c_r = pow_mod.pow_c_r
     f = epyc_pow_mod.pow_c_r
     b = complex(rand(), rand())
     e = rand()
@@ -103,7 +103,7 @@ def test_pow_c_r(epyc_pow_mod):
 
 
 def test_pow_r_c(epyc_pow_mod):
-    pow_r_c = pow.pow_r_c
+    pow_r_c = pow_mod.pow_r_c
     f = epyc_pow_mod.pow_r_c
     b = rand()
     e = complex(rand(), rand())
@@ -119,14 +119,14 @@ def test_pow_chain(epyc_pow_mod):
     z = uniform(high=1.0)
 
     for c_name in ("chain_pow1", "chain_pow2", "chain_pow3"):
-        c = getattr(pow, c_name)
+        c = getattr(pow_mod, c_name)
         f = getattr(epyc_pow_mod, c_name)
         assert isclose(f(x, y, z), c(x, y, z), rtol=RTOL, atol=ATOL)
         assert isinstance(f(x, y, z), type(c(x, y, z)))
 
 
 def test_square(epyc_pow_mod):
-    square = pow.square
+    square = pow_mod.square
     f = epyc_pow_mod.square
     x = randint(40)
     y = uniform()
@@ -138,7 +138,7 @@ def test_square(epyc_pow_mod):
 
 
 def test_sqrt(epyc_pow_mod):
-    sqrt = pow.sqrt
+    sqrt = pow_mod.sqrt
     f = epyc_pow_mod.sqrt
     x = randint(40)
     y = uniform()
@@ -150,7 +150,7 @@ def test_sqrt(epyc_pow_mod):
 
 
 def test_fabs(epyc_pow_mod):
-    fabs = pow.fabs
+    fabs = pow_mod.fabs
     f = epyc_pow_mod.fabs
     x = randint(40)
     y = uniform()
@@ -162,7 +162,7 @@ def test_fabs(epyc_pow_mod):
 
 
 def test_abs(epyc_pow_mod):
-    norm = pow.norm
+    norm = pow_mod.norm
     f = epyc_pow_mod.norm
     x = randint(40) + 1j * randint(40)
     y = randint(40) - 1j * randint(40)
@@ -174,7 +174,7 @@ def test_abs(epyc_pow_mod):
 
 
 def test_complicated_abs(epyc_pow_mod):
-    norm = pow.complicated_abs
+    norm = pow_mod.complicated_abs
     f = epyc_pow_mod.complicated_abs
     x = randint(40) + 1j * randint(40)
     y = randint(40) - 1j * randint(40)
@@ -186,7 +186,7 @@ def test_complicated_abs(epyc_pow_mod):
 
 
 def test_fcomplex_type_conversion(epyc_pow_mod):
-    fcomplex = pow.fcomplex
+    fcomplex = pow_mod.fcomplex
     f = epyc_pow_mod.fcomplex
     x = randint(40) + 1j * randint(40)
     y = randint(40) + 1j * randint(40)
