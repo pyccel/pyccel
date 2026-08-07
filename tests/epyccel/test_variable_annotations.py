@@ -129,8 +129,6 @@ def test_stack_array_annotation_2(epyc_variable_annotations_mod):
 
 def test_final_annotation(language):
     def final_annotation():
-        from typing import Final
-
         a: Final[int] = 3
         a = 4
         return a
