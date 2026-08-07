@@ -1,6 +1,6 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 import pytest
-from modules import epyccel_dicts
+from modules import dicts
 
 from pyccel import epyccel
 
@@ -8,8 +8,8 @@ from epyccel_utilities import epyccel_module_with_fallback
 
 
 @pytest.fixture(scope="module")
-def epyc_epyccel_dicts_mod(language):
-    return epyccel_module_with_fallback(epyccel_dicts, language)
+def epyc_dicts_mod(language):
+    return epyccel_module_with_fallback(dicts, language)
 
 
 @pytest.fixture(
@@ -36,9 +36,9 @@ def python_only_language(request):
     return request.param
 
 
-def test_dict_init(epyc_epyccel_dicts_mod):
-    dict_init = epyccel_dicts.dict_init
-    epyc_dict_init = epyc_epyccel_dicts_mod.dict_init
+def test_dict_init(epyc_dicts_mod):
+    dict_init = dicts.dict_init
+    epyc_dict_init = epyc_dicts_mod.dict_init
     pyccel_result = epyc_dict_init()
     python_result = dict_init()
     assert isinstance(python_result, type(pyccel_result))
@@ -57,9 +57,9 @@ def test_dict_str_keys(python_only_language):
     assert python_result == pyccel_result
 
 
-def test_dict_empty_init(epyc_epyccel_dicts_mod):
-    dict_empty_init = epyccel_dicts.dict_empty_init
-    epyc_dict_empty_init = epyc_epyccel_dicts_mod.dict_empty_init
+def test_dict_empty_init(epyc_dicts_mod):
+    dict_empty_init = dicts.dict_empty_init
+    epyc_dict_empty_init = epyc_dicts_mod.dict_empty_init
     pyccel_result = epyc_dict_empty_init()
     python_result = dict_empty_init()
     assert isinstance(python_result, type(pyccel_result))
@@ -91,45 +91,45 @@ def test_dict_kwarg_init(python_only_language):
     assert python_result == pyccel_result
 
 
-def test_pop_element(epyc_epyccel_dicts_mod):
-    pop_element = epyccel_dicts.pop_element
-    epyc_element = epyc_epyccel_dicts_mod.pop_element
+def test_pop_element(epyc_dicts_mod):
+    pop_element = dicts.pop_element
+    epyc_element = epyc_dicts_mod.pop_element
     pyccel_result = epyc_element()
     python_result = pop_element()
     assert isinstance(python_result, type(pyccel_result))
     assert python_result == pyccel_result
 
 
-def test_pop_default_element(epyc_epyccel_dicts_mod):
-    pop_default_element = epyccel_dicts.pop_default_element
-    epyc_default_element = epyc_epyccel_dicts_mod.pop_default_element
+def test_pop_default_element(epyc_dicts_mod):
+    pop_default_element = dicts.pop_default_element
+    epyc_default_element = epyc_dicts_mod.pop_default_element
     pyccel_result = epyc_default_element()
     python_result = pop_default_element()
     assert isinstance(python_result, type(pyccel_result))
     assert python_result == pyccel_result
 
 
-def test_pop_bool_keys(epyc_epyccel_dicts_mod):
-    pop_default_element = epyccel_dicts.pop_bool_keys
-    epyc_default_element = epyc_epyccel_dicts_mod.pop_bool_keys
+def test_pop_bool_keys(epyc_dicts_mod):
+    pop_default_element = dicts.pop_bool_keys
+    epyc_default_element = epyc_dicts_mod.pop_bool_keys
     pyccel_result = epyc_default_element()
     python_result = pop_default_element()
     assert isinstance(python_result, type(pyccel_result))
     assert python_result == pyccel_result
 
 
-def test_pop_falsy_int_default_element(epyc_epyccel_dicts_mod):
-    pop_falsy_int_default_element = epyccel_dicts.pop_falsy_int_default_element
-    epyc_func = epyc_epyccel_dicts_mod.pop_falsy_int_default_element
+def test_pop_falsy_int_default_element(epyc_dicts_mod):
+    pop_falsy_int_default_element = dicts.pop_falsy_int_default_element
+    epyc_func = epyc_dicts_mod.pop_falsy_int_default_element
     pyccel_result = epyc_func()
     python_result = pop_falsy_int_default_element()
     assert isinstance(python_result, type(pyccel_result))
     assert python_result == pyccel_result
 
 
-def test_pop_falsy_bool_default_element(epyc_epyccel_dicts_mod):
-    pop_falsy_bool_default_element = epyccel_dicts.pop_falsy_bool_default_element
-    epyc_default_element = epyc_epyccel_dicts_mod.pop_falsy_bool_default_element
+def test_pop_falsy_bool_default_element(epyc_dicts_mod):
+    pop_falsy_bool_default_element = dicts.pop_falsy_bool_default_element
+    epyc_default_element = epyc_dicts_mod.pop_falsy_bool_default_element
     pyccel_result = epyc_default_element()
     python_result = pop_falsy_bool_default_element()
     assert isinstance(python_result, type(pyccel_result))
@@ -161,17 +161,17 @@ def test_pop_non_literal_str_keys(stc_language):
     assert python_result == pyccel_result
 
 
-def test_pop_item(epyc_epyccel_dicts_mod):
+def test_pop_item(epyc_dicts_mod):
     original_dict = {1: 1.0, 2: 2.0}
-    epyc_default_element = epyc_epyccel_dicts_mod.pop_item
+    epyc_default_element = epyc_dicts_mod.pop_item
     pyccel_result = epyc_default_element()
     assert pyccel_result[0] in original_dict
     assert pyccel_result[1] == original_dict[pyccel_result[0]]
 
 
-def test_pop_item_elements(epyc_epyccel_dicts_mod):
+def test_pop_item_elements(epyc_dicts_mod):
     original_dict = {1: 1.0, 2: 2.0}
-    epyc_default_element = epyc_epyccel_dicts_mod.pop_item_elements
+    epyc_default_element = epyc_dicts_mod.pop_item_elements
     pyccel_result = epyc_default_element()
     assert pyccel_result[0] in original_dict
     assert pyccel_result[1] == original_dict[pyccel_result[0]]
@@ -190,23 +190,23 @@ def test_pop_item_str_keys(stc_language):
     assert pyccel_result[1] == original_dict[pyccel_result[0]]
 
 
-def test_pop_item_key(epyc_epyccel_dicts_mod):
+def test_pop_item_key(epyc_dicts_mod):
     original_dict = {1: 1.0, 2: 2.0}
-    epyc_default_element = epyc_epyccel_dicts_mod.pop_item_key
+    epyc_default_element = epyc_dicts_mod.pop_item_key
     pyccel_result = epyc_default_element()
     assert pyccel_result in original_dict
 
 
-def test_pop_item_expression(epyc_epyccel_dicts_mod):
+def test_pop_item_expression(epyc_dicts_mod):
     possible_results = {5, 6}
-    epyc_default_element = epyc_epyccel_dicts_mod.pop_item_expression
+    epyc_default_element = epyc_dicts_mod.pop_item_expression
     pyccel_result = epyc_default_element()
     assert pyccel_result in possible_results
 
 
-def test_pop_item_unpacking(epyc_epyccel_dicts_mod):
+def test_pop_item_unpacking(epyc_dicts_mod):
     original_dict = {1: 1.0, 2: 2.0}
-    epyc_default_element = epyc_epyccel_dicts_mod.pop_item_unpacking
+    epyc_default_element = epyc_dicts_mod.pop_item_unpacking
     pyccel_result = epyc_default_element()
     assert pyccel_result[0] in original_dict
     assert pyccel_result[1] == original_dict[pyccel_result[0]]
@@ -299,9 +299,9 @@ def test_get_falsy_bool_default_element(stc_language):
     assert python_result == pyccel_result
 
 
-def test_getitem_element(epyc_epyccel_dicts_mod):
-    getitem_element = epyccel_dicts.getitem_element
-    epyc_element = epyc_epyccel_dicts_mod.getitem_element
+def test_getitem_element(epyc_dicts_mod):
+    getitem_element = dicts.getitem_element
+    epyc_element = epyc_dicts_mod.getitem_element
     pyccel_result = epyc_element()
     python_result = getitem_element()
     assert isinstance(python_result, type(pyccel_result))
@@ -335,18 +335,18 @@ def test_getitem_array_element(python_only_language):
     assert python_result == pyccel_result
 
 
-def test_getitem_modify_element(epyc_epyccel_dicts_mod):
-    getitem_modify_element = epyccel_dicts.getitem_modify_element
-    epyc_modify_element = epyc_epyccel_dicts_mod.getitem_modify_element
+def test_getitem_modify_element(epyc_dicts_mod):
+    getitem_modify_element = dicts.getitem_modify_element
+    epyc_modify_element = epyc_dicts_mod.getitem_modify_element
     pyccel_result = epyc_modify_element()
     python_result = getitem_modify_element()
     assert isinstance(python_result, type(pyccel_result))
     assert python_result == pyccel_result
 
 
-def test_dict_contains(epyc_epyccel_dicts_mod):
-    dict_contains = epyccel_dicts.dict_contains
-    epyc_func = epyc_epyccel_dicts_mod.dict_contains
+def test_dict_contains(epyc_dicts_mod):
+    dict_contains = dicts.dict_contains
+    epyc_func = epyc_dicts_mod.dict_contains
     pyccel_result = epyc_func()
     python_result = dict_contains()
     assert isinstance(python_result, type(pyccel_result))
@@ -381,9 +381,9 @@ def test_dict_ptr(python_only_language):
     assert python_result == pyccel_result
 
 
-def test_dict_clear(epyc_epyccel_dicts_mod):
-    dict_clear = epyccel_dicts.dict_clear
-    epyc_dict_clear = epyc_epyccel_dicts_mod.dict_clear
+def test_dict_clear(epyc_dicts_mod):
+    dict_clear = dicts.dict_clear
+    epyc_dict_clear = epyc_dicts_mod.dict_clear
     pyccel_result = epyc_dict_clear()
     python_result = dict_clear()
     assert python_result == pyccel_result
@@ -401,9 +401,9 @@ def test_dict_copy_method(python_only_language):
     assert python_result == pyccel_result
 
 
-def test_dict_items(epyc_epyccel_dicts_mod):
-    dict_items = epyccel_dicts.dict_items
-    epyc_dict_items = epyc_epyccel_dicts_mod.dict_items
+def test_dict_items(epyc_dicts_mod):
+    dict_items = dicts.dict_items
+    epyc_dict_items = epyc_dicts_mod.dict_items
     pyccel_result = epyc_dict_items()
     python_result = dict_items()
     assert python_result == pyccel_result
@@ -411,25 +411,25 @@ def test_dict_items(epyc_epyccel_dicts_mod):
     assert isinstance(python_result[1], type(pyccel_result[1]))
 
 
-def test_dict_keys(epyc_epyccel_dicts_mod):
-    dict_keys = epyccel_dicts.dict_keys
-    epyc_dict_keys = epyc_epyccel_dicts_mod.dict_keys
+def test_dict_keys(epyc_dicts_mod):
+    dict_keys = dicts.dict_keys
+    epyc_dict_keys = epyc_dicts_mod.dict_keys
     pyccel_result = epyc_dict_keys()
     python_result = dict_keys()
     assert python_result == pyccel_result
 
 
-def test_dict_keys_iter(epyc_epyccel_dicts_mod):
-    dict_keys = epyccel_dicts.dict_keys_iter
-    epyc_dict_keys = epyc_epyccel_dicts_mod.dict_keys_iter
+def test_dict_keys_iter(epyc_dicts_mod):
+    dict_keys = dicts.dict_keys_iter
+    epyc_dict_keys = epyc_dicts_mod.dict_keys_iter
     pyccel_result = epyc_dict_keys()
     python_result = dict_keys()
     assert python_result == pyccel_result
 
 
-def test_dict_values(epyc_epyccel_dicts_mod):
-    dict_values = epyccel_dicts.dict_values
-    epyc_dict_values = epyc_epyccel_dicts_mod.dict_values
+def test_dict_values(epyc_dicts_mod):
+    dict_values = dicts.dict_values
+    epyc_dict_values = epyc_dicts_mod.dict_values
     pyccel_result = epyc_dict_values()
     python_result = dict_values()
     assert python_result == pyccel_result

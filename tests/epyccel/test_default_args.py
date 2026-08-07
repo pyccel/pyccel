@@ -3,7 +3,7 @@
 
 import numpy as np
 import pytest
-from modules import epyccel_default_args
+from modules import default_args
 
 from pyccel import epyccel
 
@@ -11,14 +11,14 @@ from epyccel_utilities import epyccel_module_with_fallback
 
 
 @pytest.fixture(scope="module")
-def epyc_epyccel_default_args_mod(language):
-    return epyccel_module_with_fallback(epyccel_default_args, language)
+def epyc_default_args_mod(language):
+    return epyccel_module_with_fallback(default_args, language)
 
 
 # ------------------------------------------------------------------------------
-def test_f1(epyc_epyccel_default_args_mod):
-    f1 = epyccel_default_args.f1
-    f = epyc_epyccel_default_args_mod.f1
+def test_f1(epyc_default_args_mod):
+    f1 = default_args.f1
+    f = epyc_default_args_mod.f1
 
     # ...
     assert f(2) == f1(2)
@@ -27,9 +27,9 @@ def test_f1(epyc_epyccel_default_args_mod):
 
 
 # ------------------------------------------------------------------------------
-def test_f2(epyc_epyccel_default_args_mod):
-    f5 = epyccel_default_args.f2
-    f = epyc_epyccel_default_args_mod.f2
+def test_f2(epyc_default_args_mod):
+    f5 = default_args.f2
+    f = epyc_default_args_mod.f2
 
     # ...
     m1 = 3
@@ -51,9 +51,9 @@ def test_f2(epyc_epyccel_default_args_mod):
 
 
 # ------------------------------------------------------------------------------
-def test_f3(epyc_epyccel_default_args_mod):
-    f3 = epyccel_default_args.f3
-    f = epyc_epyccel_default_args_mod.f3
+def test_f3(epyc_default_args_mod):
+    f3 = default_args.f3
+    f = epyc_default_args_mod.f3
 
     # ...
     assert f(19.2, 6.7) == f3(19.2, 6.7)
@@ -64,9 +64,9 @@ def test_f3(epyc_epyccel_default_args_mod):
 
 
 # ------------------------------------------------------------------------------
-def test_f4(epyc_epyccel_default_args_mod):
-    f4 = epyccel_default_args.f4
-    f = epyc_epyccel_default_args_mod.f4
+def test_f4(epyc_default_args_mod):
+    f4 = default_args.f4
+    f = epyc_default_args_mod.f4
 
     # ...
     assert f(True) == f4(True)
@@ -76,9 +76,9 @@ def test_f4(epyc_epyccel_default_args_mod):
 
 
 # ------------------------------------------------------------------------------
-def test_f5(epyc_epyccel_default_args_mod):
-    f5 = epyccel_default_args.f5
-    f = epyc_epyccel_default_args_mod.f5
+def test_f5(epyc_default_args_mod):
+    f5 = default_args.f5
+    f = epyc_default_args_mod.f5
 
     # ...
     assert f(2.9 + 3j) == f5(2.9 + 3j)
@@ -97,9 +97,9 @@ def test_changed_precision_arguments(language):
 
 
 # ------------------------------------------------------------------------------
-def test_default_interface_value(epyc_epyccel_default_args_mod):
-    max_abs = epyccel_default_args.max_abs
-    f = epyc_epyccel_default_args_mod.max_abs
+def test_default_interface_value(epyc_default_args_mod):
+    max_abs = default_args.max_abs
+    f = epyc_default_args_mod.max_abs
 
     # ...
     assert f(2.9) == max_abs(2.9)

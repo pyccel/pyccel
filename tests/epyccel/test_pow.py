@@ -1,6 +1,6 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 import pytest
-from modules import epyccel_pow
+from modules import pow
 from numpy import isclose
 from numpy.random import rand, randint, uniform
 
@@ -9,13 +9,13 @@ from tolerances import ATOL, RTOL, min_abs_float
 
 
 @pytest.fixture(scope="module")
-def epyc_epyccel_pow_mod(language):
-    return epyccel_module_with_fallback(epyccel_pow, language)
+def epyc_pow_mod(language):
+    return epyccel_module_with_fallback(pow, language)
 
 
-def test_pow_int_int(epyc_epyccel_pow_mod):
-    f_call = epyccel_pow.f_call
-    f = epyc_epyccel_pow_mod.f_call
+def test_pow_int_int(epyc_pow_mod):
+    f_call = pow.f_call
+    f = epyc_pow_mod.f_call
     x = randint(50)
     y = randint(5)
 
@@ -26,9 +26,9 @@ def test_pow_int_int(epyc_epyccel_pow_mod):
     assert isinstance(f(x, y), type(f_call(x, y)))
 
 
-def test_pow_real_real(epyc_epyccel_pow_mod):
-    pow_r_r = epyccel_pow.pow_r_r
-    f = epyc_epyccel_pow_mod.pow_r_r
+def test_pow_real_real(epyc_pow_mod):
+    pow_r_r = pow.pow_r_r
+    f = epyc_pow_mod.pow_r_r
     x = uniform(low=min_abs_float, high=50)
     y = uniform(high=5)
 
@@ -37,9 +37,9 @@ def test_pow_real_real(epyc_epyccel_pow_mod):
     assert isinstance(f(x, y), type(pow_r_r(x, y)))
 
 
-def test_pow_real_int(epyc_epyccel_pow_mod):
-    pow_r_i = epyccel_pow.pow_r_i
-    f = epyc_epyccel_pow_mod.pow_r_i
+def test_pow_real_int(epyc_pow_mod):
+    pow_r_i = pow.pow_r_i
+    f = epyc_pow_mod.pow_r_i
     x = uniform(low=min_abs_float, high=50)
     y = randint(5)
 
@@ -48,9 +48,9 @@ def test_pow_real_int(epyc_epyccel_pow_mod):
     assert isinstance(f(x, y), type(pow_r_i(x, y)))
 
 
-def test_pow_int_real(epyc_epyccel_pow_mod):
-    pow_i_r = epyccel_pow.pow_i_r
-    f = epyc_epyccel_pow_mod.pow_i_r
+def test_pow_int_real(epyc_pow_mod):
+    pow_i_r = pow.pow_i_r
+    f = epyc_pow_mod.pow_i_r
     x = randint(40)
     y = uniform()
 
@@ -58,9 +58,9 @@ def test_pow_int_real(epyc_epyccel_pow_mod):
     assert isinstance(f(x, y), type(pow_i_r(x, y)))
 
 
-def test_pow_special_cases(epyc_epyccel_pow_mod):
-    pow_sp = epyccel_pow.pow_sp
-    f = epyc_epyccel_pow_mod.pow_sp
+def test_pow_special_cases(epyc_pow_mod):
+    pow_sp = pow.pow_sp
+    f = epyc_pow_mod.pow_sp
     e = uniform(high=1e6)
     assert isclose(f(0.0, e), pow_sp(0.0, e), rtol=RTOL, atol=ATOL)
     assert isclose(f(0.0, e), pow_sp(0.0, e), rtol=RTOL, atol=ATOL)
@@ -69,9 +69,9 @@ def test_pow_special_cases(epyc_epyccel_pow_mod):
 # ---------------------------- Complex numbers ----------------------------- #
 
 
-def test_pow_c_c(epyc_epyccel_pow_mod):
-    pow_c_c = epyccel_pow.pow_c_c
-    f = epyc_epyccel_pow_mod.pow_c_c
+def test_pow_c_c(epyc_pow_mod):
+    pow_c_c = pow.pow_c_c
+    f = epyc_pow_mod.pow_c_c
     b = complex(rand(), rand())
     e = complex(rand(), rand())
     assert isclose(f(b, e), pow_c_c(b, e), rtol=RTOL, atol=ATOL)
@@ -80,9 +80,9 @@ def test_pow_c_c(epyc_epyccel_pow_mod):
     assert isclose(f(-b, -e), pow_c_c(-b, -e), rtol=RTOL, atol=ATOL)
 
 
-def test_pow_c_i(epyc_epyccel_pow_mod):
-    pow_c_i = epyccel_pow.pow_c_i
-    f = epyc_epyccel_pow_mod.pow_c_i
+def test_pow_c_i(epyc_pow_mod):
+    pow_c_i = pow.pow_c_i
+    f = epyc_pow_mod.pow_c_i
     b = complex(rand(), rand())
     e = randint(10)
     assert isclose(f(b, e), pow_c_i(b, e), rtol=RTOL, atol=ATOL)
@@ -91,9 +91,9 @@ def test_pow_c_i(epyc_epyccel_pow_mod):
     assert isclose(f(-b, -e), pow_c_i(-b, -e), rtol=RTOL, atol=ATOL)
 
 
-def test_pow_c_r(epyc_epyccel_pow_mod):
-    pow_c_r = epyccel_pow.pow_c_r
-    f = epyc_epyccel_pow_mod.pow_c_r
+def test_pow_c_r(epyc_pow_mod):
+    pow_c_r = pow.pow_c_r
+    f = epyc_pow_mod.pow_c_r
     b = complex(rand(), rand())
     e = rand()
     assert isclose(f(b, e), pow_c_r(b, e), rtol=RTOL, atol=ATOL)
@@ -102,9 +102,9 @@ def test_pow_c_r(epyc_epyccel_pow_mod):
     assert isclose(f(-b, -e), pow_c_r(-b, -e), rtol=RTOL, atol=ATOL)
 
 
-def test_pow_r_c(epyc_epyccel_pow_mod):
-    pow_r_c = epyccel_pow.pow_r_c
-    f = epyc_epyccel_pow_mod.pow_r_c
+def test_pow_r_c(epyc_pow_mod):
+    pow_r_c = pow.pow_r_c
+    f = epyc_pow_mod.pow_r_c
     b = rand()
     e = complex(rand(), rand())
     assert isclose(f(b, e), pow_r_c(b, e), rtol=RTOL, atol=ATOL)
@@ -113,21 +113,21 @@ def test_pow_r_c(epyc_epyccel_pow_mod):
     assert isclose(f(-b, -e), pow_r_c(-b, -e), rtol=RTOL, atol=ATOL)
 
 
-def test_pow_chain(epyc_epyccel_pow_mod):
+def test_pow_chain(epyc_pow_mod):
     x = uniform(low=min_abs_float, high=10)
     y = uniform(high=5)
     z = uniform(high=1.0)
 
     for c_name in ("chain_pow1", "chain_pow2", "chain_pow3"):
-        c = getattr(epyccel_pow, c_name)
-        f = getattr(epyc_epyccel_pow_mod, c_name)
+        c = getattr(pow, c_name)
+        f = getattr(epyc_pow_mod, c_name)
         assert isclose(f(x, y, z), c(x, y, z), rtol=RTOL, atol=ATOL)
         assert isinstance(f(x, y, z), type(c(x, y, z)))
 
 
-def test_square(epyc_epyccel_pow_mod):
-    square = epyccel_pow.square
-    f = epyc_epyccel_pow_mod.square
+def test_square(epyc_pow_mod):
+    square = pow.square
+    f = epyc_pow_mod.square
     x = randint(40)
     y = uniform()
 
@@ -137,9 +137,9 @@ def test_square(epyc_epyccel_pow_mod):
     assert isinstance(f(y), type(square(y)))
 
 
-def test_sqrt(epyc_epyccel_pow_mod):
-    sqrt = epyccel_pow.sqrt
-    f = epyc_epyccel_pow_mod.sqrt
+def test_sqrt(epyc_pow_mod):
+    sqrt = pow.sqrt
+    f = epyc_pow_mod.sqrt
     x = randint(40)
     y = uniform()
 
@@ -149,9 +149,9 @@ def test_sqrt(epyc_epyccel_pow_mod):
     assert isinstance(f(y), type(sqrt(y)))
 
 
-def test_fabs(epyc_epyccel_pow_mod):
-    fabs = epyccel_pow.fabs
-    f = epyc_epyccel_pow_mod.fabs
+def test_fabs(epyc_pow_mod):
+    fabs = pow.fabs
+    f = epyc_pow_mod.fabs
     x = randint(40)
     y = uniform()
 
@@ -161,9 +161,9 @@ def test_fabs(epyc_epyccel_pow_mod):
     assert isinstance(f(y), type(fabs(y)))
 
 
-def test_abs(epyc_epyccel_pow_mod):
-    norm = epyccel_pow.norm
-    f = epyc_epyccel_pow_mod.norm
+def test_abs(epyc_pow_mod):
+    norm = pow.norm
+    f = epyc_pow_mod.norm
     x = randint(40) + 1j * randint(40)
     y = randint(40) - 1j * randint(40)
 
@@ -173,9 +173,9 @@ def test_abs(epyc_epyccel_pow_mod):
     assert isinstance(f(y), type(norm(y)))
 
 
-def test_complicated_abs(epyc_epyccel_pow_mod):
-    norm = epyccel_pow.complicated_abs
-    f = epyc_epyccel_pow_mod.complicated_abs
+def test_complicated_abs(epyc_pow_mod):
+    norm = pow.complicated_abs
+    f = epyc_pow_mod.complicated_abs
     x = randint(40) + 1j * randint(40)
     y = randint(40) - 1j * randint(40)
 
@@ -185,9 +185,9 @@ def test_complicated_abs(epyc_epyccel_pow_mod):
     assert isinstance(f(y), type(norm(y)))
 
 
-def test_fcomplex_type_conversion(epyc_epyccel_pow_mod):
-    fcomplex = epyccel_pow.fcomplex
-    f = epyc_epyccel_pow_mod.fcomplex
+def test_fcomplex_type_conversion(epyc_pow_mod):
+    fcomplex = pow.fcomplex
+    f = epyc_pow_mod.fcomplex
     x = randint(40) + 1j * randint(40)
     y = randint(40) + 1j * randint(40)
 

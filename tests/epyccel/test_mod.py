@@ -2,7 +2,7 @@
 import os
 
 import pytest
-from modules import epyccel_mod
+from modules import mod
 from numpy import allclose
 from numpy.random import randint, uniform
 
@@ -12,7 +12,7 @@ from tolerances import ATOL, RTOL
 
 @pytest.fixture(scope="module")
 def epyc_modulo_mod(language):
-    return epyccel_module_with_fallback(epyccel_mod, language)
+    return epyccel_module_with_fallback(mod, language)
 
 
 # Relative and absolute tolerances for array comparisons in the form
@@ -23,7 +23,7 @@ if os.environ.get("PYCCEL_DEFAULT_COMPILER", "GNU") == "intel":
 
 
 def test_modulo_int_int(epyc_modulo_mod):
-    modulo_i_i = epyccel_mod.modulo_i_i
+    modulo_i_i = mod.modulo_i_i
     f = epyc_modulo_mod.modulo_i_i
     x = randint(0, 1e6)
     y = randint(1, 1e6)
@@ -35,7 +35,7 @@ def test_modulo_int_int(epyc_modulo_mod):
 
 
 def test_modulo_real_real(epyc_modulo_mod):
-    modulo_r_r = epyccel_mod.modulo_r_r
+    modulo_r_r = mod.modulo_r_r
     f = epyc_modulo_mod.modulo_r_r
     x = uniform(low=0, high=1e6)
     y = uniform(low=1, high=1e2)
@@ -47,7 +47,7 @@ def test_modulo_real_real(epyc_modulo_mod):
 
 
 def test_modulo_real_int(epyc_modulo_mod):
-    modulo_r_i = epyccel_mod.modulo_r_i
+    modulo_r_i = mod.modulo_r_i
     f = epyc_modulo_mod.modulo_r_i
     x = uniform(low=0, high=1e6)
     y = randint(low=1, high=1e6)
@@ -59,7 +59,7 @@ def test_modulo_real_int(epyc_modulo_mod):
 
 
 def test_modulo_int_real(epyc_modulo_mod):
-    modulo_i_r = epyccel_mod.modulo_i_r
+    modulo_i_r = mod.modulo_i_r
     f = epyc_modulo_mod.modulo_i_r
     x = randint(0, 1e6)
     y = uniform(low=1, high=1e2)
@@ -71,7 +71,7 @@ def test_modulo_int_real(epyc_modulo_mod):
 
 
 def test_modulo_multiple(epyc_modulo_mod):
-    modulo_multiple = epyccel_mod.modulo_multiple
+    modulo_multiple = mod.modulo_multiple
     f = epyc_modulo_mod.modulo_multiple
     x = randint(0, 1e6)
     y = uniform(low=1, high=1e4)

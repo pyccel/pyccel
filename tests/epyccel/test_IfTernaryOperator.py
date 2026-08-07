@@ -1,7 +1,7 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 
 import pytest
-from modules import epyccel_IfTernaryOperator
+from modules import IfTernaryOperator
 
 from pyccel import epyccel
 
@@ -9,15 +9,15 @@ from epyccel_utilities import epyccel_module_with_fallback
 
 
 @pytest.fixture(scope="module")
-def epyc_epyccel_IfTernaryOperator_mod(language):
-    return epyccel_module_with_fallback(epyccel_IfTernaryOperator, language)
+def epyc_IfTernaryOperator_mod(language):
+    return epyccel_module_with_fallback(IfTernaryOperator, language)
 
 
 # wp suffix means With Parentheses
 # ------------------------------------------------------------------------------
-def test_f1(epyc_epyccel_IfTernaryOperator_mod):
-    f1 = epyccel_IfTernaryOperator.f1
-    f = epyc_epyccel_IfTernaryOperator_mod.f1
+def test_f1(epyc_IfTernaryOperator_mod):
+    f1 = IfTernaryOperator.f1
+    f = epyc_IfTernaryOperator_mod.f1
 
     # ...
     assert f(6) == f1(6)
@@ -28,9 +28,9 @@ def test_f1(epyc_epyccel_IfTernaryOperator_mod):
 # ------------------------------------------------------------------------------
 
 
-def test_f2(epyc_epyccel_IfTernaryOperator_mod):
-    f2 = epyccel_IfTernaryOperator.f2
-    f = epyc_epyccel_IfTernaryOperator_mod.f2
+def test_f2(epyc_IfTernaryOperator_mod):
+    f2 = IfTernaryOperator.f2
+    f = epyc_IfTernaryOperator_mod.f2
 
     # ...
     assert f(6) == f2(6)
@@ -39,11 +39,11 @@ def test_f2(epyc_epyccel_IfTernaryOperator_mod):
 
 
 # ------------------------------------------------------------------------------
-def test_f3(epyc_epyccel_IfTernaryOperator_mod):
-    f3 = epyccel_IfTernaryOperator.f3
-    f3wp = epyc_epyccel_IfTernaryOperator_mod.f3wp
-    f = epyc_epyccel_IfTernaryOperator_mod.f3
-    fwp = epyc_epyccel_IfTernaryOperator_mod.f3wp
+def test_f3(epyc_IfTernaryOperator_mod):
+    f3 = IfTernaryOperator.f3
+    f3wp = epyc_IfTernaryOperator_mod.f3wp
+    f = epyc_IfTernaryOperator_mod.f3
+    fwp = epyc_IfTernaryOperator_mod.f3wp
 
     # ...
     assert f(6) == f3(6)
@@ -57,11 +57,11 @@ def test_f3(epyc_epyccel_IfTernaryOperator_mod):
 # ------------------------------------------------------------------------------
 
 
-def test_f4(epyc_epyccel_IfTernaryOperator_mod):
-    f4 = epyccel_IfTernaryOperator.f4
-    f4wp = epyc_epyccel_IfTernaryOperator_mod.f4wp
-    f = epyc_epyccel_IfTernaryOperator_mod.f4
-    fwp = epyc_epyccel_IfTernaryOperator_mod.f4wp
+def test_f4(epyc_IfTernaryOperator_mod):
+    f4 = IfTernaryOperator.f4
+    f4wp = epyc_IfTernaryOperator_mod.f4wp
+    f = epyc_IfTernaryOperator_mod.f4
+    fwp = epyc_IfTernaryOperator_mod.f4wp
 
     # ...
     assert f(6) == f4(6)
@@ -73,11 +73,11 @@ def test_f4(epyc_epyccel_IfTernaryOperator_mod):
 
 
 # ------------------------------------------------------------------------------
-def test_f5(epyc_epyccel_IfTernaryOperator_mod):
-    f5 = epyccel_IfTernaryOperator.f5
-    f5wp = epyc_epyccel_IfTernaryOperator_mod.f5wp
-    f = epyc_epyccel_IfTernaryOperator_mod.f5
-    fwp = epyc_epyccel_IfTernaryOperator_mod.f5wp
+def test_f5(epyc_IfTernaryOperator_mod):
+    f5 = IfTernaryOperator.f5
+    f5wp = epyc_IfTernaryOperator_mod.f5wp
+    f = epyc_IfTernaryOperator_mod.f5
+    fwp = epyc_IfTernaryOperator_mod.f5wp
 
     # ...
     assert f(6) == f5(6)
@@ -91,11 +91,11 @@ def test_f5(epyc_epyccel_IfTernaryOperator_mod):
 
 
 # ------------------------------------------------------------------------------
-def test_f6(epyc_epyccel_IfTernaryOperator_mod):
-    f6 = epyccel_IfTernaryOperator.f6
-    f6wp = epyc_epyccel_IfTernaryOperator_mod.f6wp
-    f = epyc_epyccel_IfTernaryOperator_mod.f6
-    fwp = epyc_epyccel_IfTernaryOperator_mod.f6wp
+def test_f6(epyc_IfTernaryOperator_mod):
+    f6 = IfTernaryOperator.f6
+    f6wp = epyc_IfTernaryOperator_mod.f6wp
+    f = epyc_IfTernaryOperator_mod.f6
+    fwp = epyc_IfTernaryOperator_mod.f6wp
 
     # ...
     assert f(6) == f6(6)
@@ -163,11 +163,11 @@ def test_f7(language):
 # ------------------------------------------------------------------------------
 
 
-def test_f8(epyc_epyccel_IfTernaryOperator_mod):
-    f8 = epyccel_IfTernaryOperator.f8
-    f8wp = epyc_epyccel_IfTernaryOperator_mod.f8wp
-    f = epyc_epyccel_IfTernaryOperator_mod.f8
-    fwp = epyc_epyccel_IfTernaryOperator_mod.f8wp
+def test_f8(epyc_IfTernaryOperator_mod):
+    f8 = IfTernaryOperator.f8
+    f8wp = epyc_IfTernaryOperator_mod.f8wp
+    f = epyc_IfTernaryOperator_mod.f8
+    fwp = epyc_IfTernaryOperator_mod.f8wp
 
     # ...
     assert f(6) == f8(6)
@@ -181,13 +181,13 @@ def test_f8(epyc_epyccel_IfTernaryOperator_mod):
 # ------------------------------------------------------------------------------
 
 
-def test_f9(epyc_epyccel_IfTernaryOperator_mod):
-    f9 = epyccel_IfTernaryOperator.f9
-    f9wp1 = epyc_epyccel_IfTernaryOperator_mod.f9wp1
-    f9wp2 = epyc_epyccel_IfTernaryOperator_mod.f9wp2
-    f = epyc_epyccel_IfTernaryOperator_mod.f9
-    fwp1 = epyc_epyccel_IfTernaryOperator_mod.f9wp1
-    fwp2 = epyc_epyccel_IfTernaryOperator_mod.f9wp2
+def test_f9(epyc_IfTernaryOperator_mod):
+    f9 = IfTernaryOperator.f9
+    f9wp1 = epyc_IfTernaryOperator_mod.f9wp1
+    f9wp2 = epyc_IfTernaryOperator_mod.f9wp2
+    f = epyc_IfTernaryOperator_mod.f9
+    fwp1 = epyc_IfTernaryOperator_mod.f9wp1
+    fwp2 = epyc_IfTernaryOperator_mod.f9wp2
     # ...
     assert f(6) == f9(6)
     assert f(4) == f9(4)
@@ -203,13 +203,13 @@ def test_f9(epyc_epyccel_IfTernaryOperator_mod):
 # ------------------------------------------------------------------------------
 
 
-def test_f10(epyc_epyccel_IfTernaryOperator_mod):
-    f10 = epyccel_IfTernaryOperator.f10
-    f10wp1 = epyc_epyccel_IfTernaryOperator_mod.f10wp1
-    f10wp2 = epyc_epyccel_IfTernaryOperator_mod.f10wp2
-    f = epyc_epyccel_IfTernaryOperator_mod.f10
-    fwp1 = epyc_epyccel_IfTernaryOperator_mod.f10wp1
-    fwp2 = epyc_epyccel_IfTernaryOperator_mod.f10wp2
+def test_f10(epyc_IfTernaryOperator_mod):
+    f10 = IfTernaryOperator.f10
+    f10wp1 = epyc_IfTernaryOperator_mod.f10wp1
+    f10wp2 = epyc_IfTernaryOperator_mod.f10wp2
+    f = epyc_IfTernaryOperator_mod.f10
+    fwp1 = epyc_IfTernaryOperator_mod.f10wp1
+    fwp2 = epyc_IfTernaryOperator_mod.f10wp2
     # ...
     assert f(6) == f10(6)
     assert f(4) == f10(4)
@@ -225,9 +225,9 @@ def test_f10(epyc_epyccel_IfTernaryOperator_mod):
 # ------------------------------------------------------------------------------
 
 
-def test_f11(epyc_epyccel_IfTernaryOperator_mod):
-    f11 = epyccel_IfTernaryOperator.f11
-    f = epyc_epyccel_IfTernaryOperator_mod.f11
+def test_f11(epyc_IfTernaryOperator_mod):
+    f11 = IfTernaryOperator.f11
+    f = epyc_IfTernaryOperator_mod.f11
     # ...
     assert f(6) == f11(6)
     assert f(-4) == f11(-4)

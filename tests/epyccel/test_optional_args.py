@@ -2,7 +2,7 @@
 
 import numpy as np
 import pytest
-from modules import epyccel_optional_args
+from modules import optional_args
 
 from pyccel import epyccel
 
@@ -11,68 +11,68 @@ from tolerances import ATOL, RTOL
 
 
 @pytest.fixture(scope="module")
-def epyc_epyccel_optional_args_mod(language):
-    return epyccel_module_with_fallback(epyccel_optional_args, language)
+def epyc_optional_args_mod(language):
+    return epyccel_module_with_fallback(optional_args, language)
 
 
 # ------------------------------------------------------------------------------
-def test_f1(epyc_epyccel_optional_args_mod):
-    f1 = epyccel_optional_args.f1
-    f = epyc_epyccel_optional_args_mod.f1
+def test_f1(epyc_optional_args_mod):
+    f1 = optional_args.f1
+    f = epyc_optional_args_mod.f1
 
     # ...
     assert f(2) == f1(2)
     assert f() == f1()
     assert f(None) == f1(None)
     assert f(0) == f1(0)
-    if epyc_epyccel_optional_args_mod.language != "python":
+    if epyc_optional_args_mod.language != "python":
         with pytest.raises(TypeError):
             f(3.5)
     # ...
 
 
 # ------------------------------------------------------------------------------
-def test_f2(epyc_epyccel_optional_args_mod):
-    f2 = epyccel_optional_args.f2
-    f = epyc_epyccel_optional_args_mod.f2
+def test_f2(epyc_optional_args_mod):
+    f2 = optional_args.f2
+    f = epyc_optional_args_mod.f2
 
     # ...
     assert np.isclose(f(2.0), f2(2.0), rtol=RTOL, atol=ATOL)
     assert np.isclose(f(), f2(), rtol=RTOL, atol=ATOL)
     assert np.isclose(f(None), f2(None), rtol=RTOL, atol=ATOL)
     assert np.isclose(f(0.0), f2(0.0), rtol=RTOL, atol=ATOL)
-    if epyc_epyccel_optional_args_mod.language != "python":
+    if epyc_optional_args_mod.language != "python":
         with pytest.raises(TypeError):
             f(3)
     # ...
 
 
 # ------------------------------------------------------------------------------
-def test_f3(epyc_epyccel_optional_args_mod):
-    f3 = epyccel_optional_args.f3
-    f = epyc_epyccel_optional_args_mod.f3
+def test_f3(epyc_optional_args_mod):
+    f3 = optional_args.f3
+    f = epyc_optional_args_mod.f3
 
     # ...
     assert np.isclose(f(complex(1, 2.2)), f3(complex(1, 2.2)), rtol=RTOL, atol=ATOL)
     assert np.isclose(f(), f3(), rtol=RTOL, atol=ATOL)
     assert np.isclose(f(None), f3(None), rtol=RTOL, atol=ATOL)
-    if epyc_epyccel_optional_args_mod.language != "python":
+    if epyc_optional_args_mod.language != "python":
         with pytest.raises(TypeError):
             f(3.5)
     # ...
 
 
 # ------------------------------------------------------------------------------
-def test_f4(epyc_epyccel_optional_args_mod):
-    f4 = epyccel_optional_args.f4
-    f = epyc_epyccel_optional_args_mod.f4
+def test_f4(epyc_optional_args_mod):
+    f4 = optional_args.f4
+    f = epyc_optional_args_mod.f4
 
     # ...
     assert f(True) == f4(True)
     assert f() == f4()
     assert f(None) == f4(None)
     assert f(False) == f4(False)
-    if epyc_epyccel_optional_args_mod.language != "python":
+    if epyc_optional_args_mod.language != "python":
         with pytest.raises(TypeError):
             f(3.5)
     # ...
@@ -106,69 +106,69 @@ def test_f6(language):
 
 
 # ------------------------------------------------------------------------------
-def test_f7(epyc_epyccel_optional_args_mod):
-    assert epyccel_optional_args.call_optional_1(
+def test_f7(epyc_optional_args_mod):
+    assert optional_args.call_optional_1(
         3
-    ) == epyc_epyccel_optional_args_mod.call_optional_1(3)
+    ) == epyc_optional_args_mod.call_optional_1(3)
     assert (
-        epyccel_optional_args.call_optional_2()
-        == epyc_epyccel_optional_args_mod.call_optional_2()
+        optional_args.call_optional_2()
+        == epyc_optional_args_mod.call_optional_2()
     )
-    assert epyccel_optional_args.call_optional_3(
+    assert optional_args.call_optional_3(
         3
-    ) == epyc_epyccel_optional_args_mod.call_optional_3(3)
+    ) == epyc_optional_args_mod.call_optional_3(3)
 
 
 # ------------------------------------------------------------------------------
-def test_f9(epyc_epyccel_optional_args_mod):
-    assert epyccel_optional_args.call_optional_4(
+def test_f9(epyc_optional_args_mod):
+    assert optional_args.call_optional_4(
         3
-    ) == epyc_epyccel_optional_args_mod.call_optional_4(3)
-    assert epyccel_optional_args.call_optional_5(
+    ) == epyc_optional_args_mod.call_optional_4(3)
+    assert optional_args.call_optional_5(
         3
-    ) == epyc_epyccel_optional_args_mod.call_optional_5(3)
+    ) == epyc_optional_args_mod.call_optional_5(3)
     assert (
-        epyccel_optional_args.call_optional_6()
-        == epyc_epyccel_optional_args_mod.call_optional_6()
+        optional_args.call_optional_6()
+        == epyc_optional_args_mod.call_optional_6()
     )
     assert (
-        epyccel_optional_args.call_optional_7()
-        == epyc_epyccel_optional_args_mod.call_optional_7()
+        optional_args.call_optional_7()
+        == epyc_optional_args_mod.call_optional_7()
     )
     assert (
-        epyccel_optional_args.call_optional_8()
-        == epyc_epyccel_optional_args_mod.call_optional_8()
-    )
-
-
-# ------------------------------------------------------------------------------
-def test_f10(epyc_epyccel_optional_args_mod):
-    assert (
-        epyccel_optional_args.call_optional_9()
-        == epyc_epyccel_optional_args_mod.call_optional_9()
-    )
-    assert (
-        epyccel_optional_args.call_optional_10()
-        == epyc_epyccel_optional_args_mod.call_optional_10()
+        optional_args.call_optional_8()
+        == epyc_optional_args_mod.call_optional_8()
     )
 
 
 # ------------------------------------------------------------------------------
-def test_f11(epyc_epyccel_optional_args_mod):
+def test_f10(epyc_optional_args_mod):
     assert (
-        epyccel_optional_args.call_optional_11()
-        == epyc_epyccel_optional_args_mod.call_optional_11()
+        optional_args.call_optional_9()
+        == epyc_optional_args_mod.call_optional_9()
     )
     assert (
-        epyccel_optional_args.call_optional_12()
-        == epyc_epyccel_optional_args_mod.call_optional_12()
+        optional_args.call_optional_10()
+        == epyc_optional_args_mod.call_optional_10()
     )
 
 
 # ------------------------------------------------------------------------------
-def test_optional_args_1d(epyc_epyccel_optional_args_mod):
-    f12 = epyccel_optional_args.f12
-    f = epyc_epyccel_optional_args_mod.f12
+def test_f11(epyc_optional_args_mod):
+    assert (
+        optional_args.call_optional_11()
+        == epyc_optional_args_mod.call_optional_11()
+    )
+    assert (
+        optional_args.call_optional_12()
+        == epyc_optional_args_mod.call_optional_12()
+    )
+
+
+# ------------------------------------------------------------------------------
+def test_optional_args_1d(epyc_optional_args_mod):
+    f12 = optional_args.f12
+    f = epyc_optional_args_mod.f12
 
     x1 = np.array([1, 2, 3], dtype=int)
     x2 = np.copy(x1)
@@ -178,15 +178,15 @@ def test_optional_args_1d(epyc_epyccel_optional_args_mod):
     # ...
     assert np.array_equal(x1, x2)
 
-    if epyc_epyccel_optional_args_mod.language != "python":
+    if epyc_optional_args_mod.language != "python":
         with pytest.raises(TypeError):
             f(x1, 3)
 
 
 # ------------------------------------------------------------------------------
-def test_optional_2d_F(epyc_epyccel_optional_args_mod):
-    f13 = epyccel_optional_args.f13
-    f = epyc_epyccel_optional_args_mod.f13
+def test_optional_2d_F(epyc_optional_args_mod):
+    f13 = optional_args.f13
+    f = epyc_optional_args_mod.f13
 
     x1 = np.array([[1, 2, 3], [4, 5, 6]], dtype=np.int32, order="F")
     x2 = np.copy(x1)
@@ -196,7 +196,7 @@ def test_optional_2d_F(epyc_epyccel_optional_args_mod):
     # ...
     assert np.array_equal(x1, x2)
 
-    if epyc_epyccel_optional_args_mod.language != "python":
+    if epyc_optional_args_mod.language != "python":
         with pytest.raises(TypeError):
             f(x1, 3.5)
 
@@ -204,9 +204,9 @@ def test_optional_2d_F(epyc_epyccel_optional_args_mod):
 # ------------------------------------------------------------------------------
 
 
-def test_f14(epyc_epyccel_optional_args_mod):
-    f14 = epyccel_optional_args.f14
-    f = epyc_epyccel_optional_args_mod.f14
+def test_f14(epyc_optional_args_mod):
+    f14 = optional_args.f14
+    f = epyc_optional_args_mod.f14
 
     # ...
     assert f(2, 7) == f14(2, 7)
