@@ -1732,11 +1732,11 @@ class SemanticParser(BasicParser):
 
             return new_expr
         else:
-            is_inline = getattr(func, "is_inline", False)
+            if not func.is_semantic:
+                func = self._annotate_the_called_function_def(func, args)
+            is_inline = pyccel_decorator_funcs["inline"] in func.decorators
             if is_inline:
                 return self._visit_InlineFunctionCall(func, args, expr)
-            elif not func.is_semantic:
-                func = self._annotate_the_called_function_def(func, args)
 
             if self.current_function_name == func.name:
                 if func.results and not isinstance(func.results.var, TypedAstNode):
@@ -1797,7 +1797,7 @@ class SemanticParser(BasicParser):
                 )
             elif isinstance(func, FunctionDef):
                 self._check_argument_compatibility(
-                    args, func_args, func, func.is_elemental
+                    args, func_args, func, pyccel_decorator_funcs["elemental"] in func.decorators
                 )
 
             return new_expr
@@ -1903,7 +1903,7 @@ class SemanticParser(BasicParser):
         func: FunctionDef|Interface
             The new annotated function.
         """
-        assert not old_func.is_inline
+        assert not pyccel_decorator_funcs["inline"] in old_func.decorators
         cls_base_syntactic = old_func.get_direct_user_nodes(
             lambda p: isinstance(p, ClassDef)
         )
@@ -5291,7 +5291,7 @@ class SemanticParser(BasicParser):
             # case of elemental function
             # if the input and args of func do not have the same shape,
             # then the lhs must be already declared
-            if func.is_elemental:
+            if pyccel_decorator_funcs["elemental"] in func.decorators:
                 # we first compare the funcdef args with the func call
                 # args
                 # d_var = None
@@ -6381,12 +6381,11 @@ class SemanticParser(BasicParser):
                 severity="error",
             )
 
-        python_name = expr.name
-        is_private = expr.is_private
-        is_inline = expr.is_inline
+        decorators = [self._visit(d) for d in expr.decorators]
 
-        if is_inline and is_private:
-            return EmptyNode()
+        python_name = expr.name
+        is_private = pyccel_decorator_funcs["private"] in decorators
+        is_inline = pyccel_decorator_funcs["inline"] in decorators
 
         if any(a.annotation is None for a in expr.arguments):
             msg = MISSING_TYPE_ANNOTATIONS
@@ -6410,8 +6409,6 @@ class SemanticParser(BasicParser):
             bound_class = self.scope.find(cls_name, "classes", raise_if_missing=True)
             insertion_scope = bound_class.scope
 
-        decorators = [self._visit(d) for d in expr.decorators]
-
         existing_semantic_funcs = []
         assert not expr.is_semantic
 
@@ -6425,10 +6422,19 @@ class SemanticParser(BasicParser):
                 else:
                     return EmptyNode()
             insertion_scope.remove_function(python_name)
+
+        if is_inline and is_private:
+            args, kwargs = expr.__getnewargs_ex__()
+            kwargs['decorators'] = decorators
+            new_func = InlineFunctionDef(*args, **kwargs, syntactic_expr = expr)
+            self.insert_function(new_func, insertion_scope)
+
+            return new_func
+
         if pyccel_decorator_funcs["low_level"] in decorators or (
             self.is_stub_file
             and not python_name.startswith("__")
-            and not expr.is_inline
+            and not is_inline
         ):
             if pyccel_decorator_funcs["low_level"] in decorators:
                 low_level_decs = decorators["low_level"]
