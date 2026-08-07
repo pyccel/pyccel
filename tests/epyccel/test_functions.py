@@ -337,9 +337,7 @@ def test_wrong_known_argument_type_in_interface(epyc_functions_mod):
 def test_wrong_known_argument_type_in_interface_with_default(
     epyc_functions_mod,
 ):
-    epyc_f = (
-        epyc_functions_mod.wrong_known_argument_type_in_interface_with_default
-    )
+    epyc_f = epyc_functions_mod.wrong_known_argument_type_in_interface_with_default
 
     test_arg = 4.5
     with pytest.raises(TypeError) as err:

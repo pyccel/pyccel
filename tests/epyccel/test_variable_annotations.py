@@ -22,9 +22,7 @@ def epyc_variable_annotations_mod(language):
 
 def test_local_type_annotation(epyc_variable_annotations_mod):
     local_type_annotation = variable_annotations.local_type_annotation
-    epyc_local_type_annotation = (
-        epyc_variable_annotations_mod.local_type_annotation
-    )
+    epyc_local_type_annotation = epyc_variable_annotations_mod.local_type_annotation
     assert epyc_local_type_annotation() == local_type_annotation()
     assert isinstance(epyc_local_type_annotation(), type(local_type_annotation()))
 
@@ -66,9 +64,7 @@ def test_stack_array_annotation(epyc_variable_annotations_mod):
         array = np.array([[1, 2], [3, 4], [5, 6]])
         return array[2, 0]
 
-    epyc_stack_array_annotation = (
-        epyc_variable_annotations_mod.stack_array_annotation
-    )
+    epyc_stack_array_annotation = epyc_variable_annotations_mod.stack_array_annotation
 
     assert epyc_stack_array_annotation() == stack_array_annotation()
     assert isinstance(epyc_stack_array_annotation(), type(stack_array_annotation()))
@@ -76,9 +72,7 @@ def test_stack_array_annotation(epyc_variable_annotations_mod):
 
 def test_local_type_annotation_2(epyc_variable_annotations_mod):
     local_type_annotation = variable_annotations.local_type_annotation_2
-    epyc_local_type_annotation = (
-        epyc_variable_annotations_mod.local_type_annotation_2
-    )
+    epyc_local_type_annotation = epyc_variable_annotations_mod.local_type_annotation_2
     assert epyc_local_type_annotation() == local_type_annotation()
     assert isinstance(epyc_local_type_annotation(), type(local_type_annotation()))
 
@@ -127,9 +121,7 @@ def test_stack_array_annotation_2(epyc_variable_annotations_mod):
         array: "int[:,:]" = np.array([[1, 2], [3, 4], [5, 6]])
         return array[2, 0]
 
-    epyc_stack_array_annotation = (
-        epyc_variable_annotations_mod.stack_array_annotation_2
-    )
+    epyc_stack_array_annotation = epyc_variable_annotations_mod.stack_array_annotation_2
 
     assert epyc_stack_array_annotation() == stack_array_annotation()
     assert isinstance(epyc_stack_array_annotation(), type(stack_array_annotation()))
@@ -154,9 +146,7 @@ def test_final_annotation_transmission(epyc_variable_annotations_mod):
 
 
 def test_homogeneous_tuple_annotation(epyc_variable_annotations_mod):
-    homogeneous_tuple_annotation = (
-        variable_annotations.homogeneous_tuple_annotation
-    )
+    homogeneous_tuple_annotation = variable_annotations.homogeneous_tuple_annotation
     epyc_homogeneous_tuple_annotation = (
         epyc_variable_annotations_mod.homogeneous_tuple_annotation
     )
@@ -168,9 +158,7 @@ def test_homogeneous_tuple_annotation(epyc_variable_annotations_mod):
 
 
 def test_homogeneous_tuple_2_annotation(epyc_variable_annotations_mod):
-    homogeneous_tuple_annotation = (
-        variable_annotations.homogeneous_tuple_2_annotation
-    )
+    homogeneous_tuple_annotation = variable_annotations.homogeneous_tuple_2_annotation
     epyc_homogeneous_tuple_annotation = (
         epyc_variable_annotations_mod.homogeneous_tuple_2_annotation
     )
@@ -182,9 +170,7 @@ def test_homogeneous_tuple_2_annotation(epyc_variable_annotations_mod):
 
 
 def test_homogeneous_tuple_annotation_str(epyc_variable_annotations_mod):
-    homogeneous_tuple_annotation = (
-        variable_annotations.homogeneous_tuple_annotation_str
-    )
+    homogeneous_tuple_annotation = variable_annotations.homogeneous_tuple_annotation_str
     epyc_homogeneous_tuple_annotation = (
         epyc_variable_annotations_mod.homogeneous_tuple_annotation_str
     )
@@ -228,9 +214,7 @@ def test_homogeneous_set_without_annotation(epyc_variable_annotations_mod):
 
 
 def test_homogeneous_set_annotation_float(epyc_variable_annotations_mod):
-    homogeneous_set_annotation = (
-        variable_annotations.homogeneous_set_annotation_float
-    )
+    homogeneous_set_annotation = variable_annotations.homogeneous_set_annotation_float
     epyc_homogeneous_set_annotation = (
         epyc_variable_annotations_mod.homogeneous_set_annotation_float
     )
@@ -241,9 +225,7 @@ def test_homogeneous_set_annotation_float(epyc_variable_annotations_mod):
 
 
 def test_homogeneous_set_annotation_bool(epyc_variable_annotations_mod):
-    homogeneous_set_annotation = (
-        variable_annotations.homogeneous_set_annotation_bool
-    )
+    homogeneous_set_annotation = variable_annotations.homogeneous_set_annotation_bool
     epyc_homogeneous_set_annotation = (
         epyc_variable_annotations_mod.homogeneous_set_annotation_bool
     )
@@ -254,9 +236,7 @@ def test_homogeneous_set_annotation_bool(epyc_variable_annotations_mod):
 
 
 def test_homogeneous_set_annotation_complex(epyc_variable_annotations_mod):
-    homogeneous_set_annotation = (
-        variable_annotations.homogeneous_set_annotation_complex
-    )
+    homogeneous_set_annotation = variable_annotations.homogeneous_set_annotation_complex
     epyc_homogeneous_set_annotation = (
         epyc_variable_annotations_mod.homogeneous_set_annotation_complex
     )
@@ -280,9 +260,7 @@ def test_empty_homogeneous_set_annotation_int(epyc_variable_annotations_mod):
 
 
 def test_homogeneous_empty_list_annotation_int(epyc_variable_annotations_mod):
-    homogeneous_list_annotation = (
-        variable_annotations.homogeneous_list_annotation
-    )
+    homogeneous_list_annotation = variable_annotations.homogeneous_list_annotation
     epyc_homogeneous_list_annotation = (
         epyc_variable_annotations_mod.homogeneous_list_annotation
     )
@@ -306,9 +284,7 @@ def test_homogeneous_empty_list_2_annotation_int(epyc_variable_annotations_mod):
 
 
 def test_homogeneous_list_annotation_int(epyc_variable_annotations_mod):
-    homogeneous_list_annotation = (
-        variable_annotations.homogeneous_list_annotation_int
-    )
+    homogeneous_list_annotation = variable_annotations.homogeneous_list_annotation_int
     epyc_homogeneous_list_annotation = (
         epyc_variable_annotations_mod.homogeneous_list_annotation_int
     )
@@ -326,9 +302,7 @@ def test_homogeneous_list_without_annotation(epyc_variable_annotations_mod):
 
 
 def test_homogeneous_list_annotation_float(epyc_variable_annotations_mod):
-    homogeneous_list_annotation = (
-        variable_annotations.homogeneous_list_annotation_float
-    )
+    homogeneous_list_annotation = variable_annotations.homogeneous_list_annotation_float
     epyc_homogeneous_list_annotation = (
         epyc_variable_annotations_mod.homogeneous_list_annotation_float
     )
@@ -355,9 +329,7 @@ def test_homogeneous_list_annotation_float64(epyc_variable_annotations_mod):
 
 
 def test_homogeneous_list_annotation_bool(epyc_variable_annotations_mod):
-    homogeneous_list_annotation = (
-        variable_annotations.homogeneous_list_annotation_bool
-    )
+    homogeneous_list_annotation = variable_annotations.homogeneous_list_annotation_bool
     epyc_homogeneous_list_annotation = (
         epyc_variable_annotations_mod.homogeneous_list_annotation_bool
     )
@@ -414,9 +386,7 @@ def test_dict_complex_float(epyc_variable_annotations_mod):
 
 
 def test_inhomogeneous_tuple_annotation_1(epyc_variable_annotations_mod):
-    inhomogeneous_tuple_annotation = (
-        variable_annotations.inhomogeneous_tuple_annotation
-    )
+    inhomogeneous_tuple_annotation = variable_annotations.inhomogeneous_tuple_annotation
     epyc_inhomogeneous_tuple_annotation = (
         epyc_variable_annotations_mod.inhomogeneous_tuple_annotation
     )

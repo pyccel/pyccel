@@ -107,62 +107,30 @@ def test_f6(language):
 
 # ------------------------------------------------------------------------------
 def test_f7(epyc_optional_args_mod):
-    assert optional_args.call_optional_1(
-        3
-    ) == epyc_optional_args_mod.call_optional_1(3)
-    assert (
-        optional_args.call_optional_2()
-        == epyc_optional_args_mod.call_optional_2()
-    )
-    assert optional_args.call_optional_3(
-        3
-    ) == epyc_optional_args_mod.call_optional_3(3)
+    assert optional_args.call_optional_1(3) == epyc_optional_args_mod.call_optional_1(3)
+    assert optional_args.call_optional_2() == epyc_optional_args_mod.call_optional_2()
+    assert optional_args.call_optional_3(3) == epyc_optional_args_mod.call_optional_3(3)
 
 
 # ------------------------------------------------------------------------------
 def test_f9(epyc_optional_args_mod):
-    assert optional_args.call_optional_4(
-        3
-    ) == epyc_optional_args_mod.call_optional_4(3)
-    assert optional_args.call_optional_5(
-        3
-    ) == epyc_optional_args_mod.call_optional_5(3)
-    assert (
-        optional_args.call_optional_6()
-        == epyc_optional_args_mod.call_optional_6()
-    )
-    assert (
-        optional_args.call_optional_7()
-        == epyc_optional_args_mod.call_optional_7()
-    )
-    assert (
-        optional_args.call_optional_8()
-        == epyc_optional_args_mod.call_optional_8()
-    )
+    assert optional_args.call_optional_4(3) == epyc_optional_args_mod.call_optional_4(3)
+    assert optional_args.call_optional_5(3) == epyc_optional_args_mod.call_optional_5(3)
+    assert optional_args.call_optional_6() == epyc_optional_args_mod.call_optional_6()
+    assert optional_args.call_optional_7() == epyc_optional_args_mod.call_optional_7()
+    assert optional_args.call_optional_8() == epyc_optional_args_mod.call_optional_8()
 
 
 # ------------------------------------------------------------------------------
 def test_f10(epyc_optional_args_mod):
-    assert (
-        optional_args.call_optional_9()
-        == epyc_optional_args_mod.call_optional_9()
-    )
-    assert (
-        optional_args.call_optional_10()
-        == epyc_optional_args_mod.call_optional_10()
-    )
+    assert optional_args.call_optional_9() == epyc_optional_args_mod.call_optional_9()
+    assert optional_args.call_optional_10() == epyc_optional_args_mod.call_optional_10()
 
 
 # ------------------------------------------------------------------------------
 def test_f11(epyc_optional_args_mod):
-    assert (
-        optional_args.call_optional_11()
-        == epyc_optional_args_mod.call_optional_11()
-    )
-    assert (
-        optional_args.call_optional_12()
-        == epyc_optional_args_mod.call_optional_12()
-    )
+    assert optional_args.call_optional_11() == epyc_optional_args_mod.call_optional_11()
+    assert optional_args.call_optional_12() == epyc_optional_args_mod.call_optional_12()
 
 
 # ------------------------------------------------------------------------------

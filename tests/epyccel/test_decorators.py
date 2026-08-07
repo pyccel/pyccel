@@ -168,7 +168,9 @@ def test_indexed_template(epyc_decorators_mod):
 
 def test_allow_negative_index_list(epyc_decorators_mod):
     allow_negative_index_annotation = decorators.allow_negative_index_annotation
-    epyc_allow_negative_index_annotation = epyc_decorators_mod.allow_negative_index_annotation
+    epyc_allow_negative_index_annotation = (
+        epyc_decorators_mod.allow_negative_index_annotation
+    )
 
     assert epyc_allow_negative_index_annotation() == allow_negative_index_annotation()
     assert isinstance(
