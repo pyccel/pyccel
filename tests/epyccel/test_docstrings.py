@@ -57,8 +57,6 @@ def test_property_docstring(epyc_docstrings_mod):
     A = docstrings.MyClassProperty
     B = epyc_docstrings_mod.MyClassProperty
 
-print(A.__doc__, B.__doc__)
-
     python_doc, pyccel_doc = pad_docstrings(A.__doc__, B.__doc__)
     assert python_doc == pyccel_doc
     python_doc, pyccel_doc = pad_docstrings(A.x.__doc__, B.x.__doc__)
