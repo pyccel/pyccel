@@ -217,3 +217,8 @@ T_my_sum = TypeVar("T_my_sum", "float[:]", "complex[:]")
 
 def my_sum(v: Final[T_my_sum]):
     return v.sum()
+
+
+def allow_negative_index_annotation():
+    a = [1, 2, 3, 4]
+    return a[-1], a[-2], a[-3], a[0]
