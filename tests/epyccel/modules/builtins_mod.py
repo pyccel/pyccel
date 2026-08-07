@@ -192,7 +192,7 @@ def round_ndigits_bool():
     return round(True), round(False), round(True, 1), round(True, -1)
 
 
-def isinstance_test(a: "bool | int | float | complex"):
+def isinstance_native(a: "bool | int | float | complex"):
     return (
         isinstance(a, bool),
         isinstance(a, int),

@@ -643,8 +643,8 @@ def test_round_ndigits_bool(epyc_builtins_mod):
 
 
 def test_isinstance_native(epyc_builtins_mod):
-    isinstance_test = builtins_mod.isinstance_test
-    f = epyc_builtins_mod.isinstance_test
+    isinstance_test = builtins_mod.isinstance_native
+    f = epyc_builtins_mod.isinstance_native
     assert f(True) == isinstance_test(True)
     assert f(False) == isinstance_test(False)
     assert f(4) == isinstance_test(6)
