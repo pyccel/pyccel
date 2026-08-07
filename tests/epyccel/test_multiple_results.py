@@ -28,7 +28,7 @@ def test_const_complex_bool_int(epyc_multiple_results_mod):
 
 
 # ...
-def test_expr_float_int_bool(epyc_multiple_results_mod):
+def test_expr_complex_int_bool(epyc_multiple_results_mod):
     compare_epyccel(
         multiple_results.expr_complex_int_bool,
         epyc_multiple_results_mod.expr_complex_int_bool,
