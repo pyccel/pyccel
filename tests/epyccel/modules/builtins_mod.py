@@ -180,15 +180,7 @@ def round_int(x: float):
     return round(x)
 
 
-def negative_round_int(x: float):
-    return round(x)
-
-
 def round_ndigits(x: float, i: int):
-    return round(x, i)
-
-
-def round_ndigits_half(x: float, i: int):
     return round(x, i)
 
 

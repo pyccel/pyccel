@@ -502,8 +502,8 @@ def test_round_int(epyc_builtins_mod):
 
 
 def test_negative_round_int(epyc_builtins_mod):
-    round_int = builtins_mod.negative_round_int
-    f = epyc_builtins_mod.negative_round_int
+    round_int = builtins_mod.round_int
+    f = epyc_builtins_mod.round_int
     x = -randint(100) / 10
 
     f_output = f(x)
@@ -569,8 +569,8 @@ def test_round_ndigits(epyc_builtins_mod):
 
 
 def test_round_ndigits_half(epyc_builtins_mod):
-    round_ndigits = builtins_mod.round_ndigits_half
-    f = epyc_builtins_mod.round_ndigits_half
+    round_ndigits = builtins_mod.round_ndigits
+    f = epyc_builtins_mod.round_ndigits
     x = randint(100) / 10
 
     f_output = f(x, 1)
