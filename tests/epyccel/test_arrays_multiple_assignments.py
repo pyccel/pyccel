@@ -25,10 +25,16 @@ def epyc_arrays_multiple_assignments_mod(language):
 
 # ==============================================================================
 def test_no_reallocation(epyc_arrays_multiple_assignments_mod):
+    # Initialize singleton that stores Pyccel errors
+    errors = Errors()
+    errors.reset()
+
     f = arrays_multiple_assignments.no_reallocation
 
-    # TODO: check that we don't get any Pyccel warnings
     g = epyc_arrays_multiple_assignments_mod.no_reallocation
+
+    # Check that we don't get any Pyccel warnings
+    assert not errors.has_warnings()
 
     # Check result of pyccelized function
     assert f() == g()
