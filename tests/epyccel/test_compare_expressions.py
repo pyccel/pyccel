@@ -41,13 +41,13 @@ def test_idiv_gt_add(epyc_compare_expressions_mod):
     f = compare_expressions.idiv_gt_add
     epyc_f = epyc_compare_expressions_mod.idiv_gt_add
     # True
-    assert f(10, 3, 2) == epyc_f(10, 3, 2)
+    assert f(10, 3, 1) == epyc_f(10, 3, 1)
     assert f(8, 2, 2) == epyc_f(8, 2, 2)
-    assert f(16, 3, 4) == epyc_f(16, 3, 4)
+    assert f(16, 3, 3) == epyc_f(16, 3, 3)
     # False
     assert f(10, 3, 2) == epyc_f(10, 3, 2)
     assert f(8, 2, 3) == epyc_f(8, 2, 3)
-    assert f(16, 3, 5) == epyc_f(16, 3, 5)
+    assert f(16, 3, 4) == epyc_f(16, 3, 4)
 
 
 def test_in_interval(epyc_compare_expressions_mod):
