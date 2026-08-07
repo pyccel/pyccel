@@ -22,9 +22,9 @@ def test_abs_i(epyc_builtins_mod):
     negative_test = randint(min_int, 0)
     positive_test = randint(0, max_int)
 
-    assert np.isclose(f1(0), f2(0), rtol=RTOL, atol=ATOL)
-    assert np.isclose(f1(negative_test), f2(negative_test), rtol=RTOL, atol=ATOL)
-    assert np.isclose(f1(positive_test), f2(positive_test), rtol=RTOL, atol=ATOL)
+    assert f1(0) == f2(0)
+    assert f1(negative_test) == f2(negative_test)
+    assert f1(positive_test) == f2(positive_test)
 
 
 def test_abs_r(epyc_builtins_mod):
