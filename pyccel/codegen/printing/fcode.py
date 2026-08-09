@@ -88,6 +88,7 @@ from pyccel.ast.datatypes import (
     TupleType,
     pyccel_type_to_original_type,
 )
+from pyccel.ast.decorators import pyccel_decorator_funcs
 from pyccel.ast.fortran_concepts import KindSpecification
 from pyccel.ast.internals import PyccelArrayShapeElement, Slice
 from pyccel.ast.itertoolsext import Product
@@ -890,11 +891,12 @@ class FCodePrinter(CodePrinter):
         ]
 
         # ...
+        private_decorator = pyccel_decorator_funcs["private"]
         public_decs = "".join(
             f"public :: {n}\n"
             for n in chain(
                 (c.name for c in expr.classes),
-                (f.name for f in funcs_to_print if not f.is_private and f.is_semantic),
+                (f.name for f in funcs_to_print if (private_decorator not in f.decorators) and f.is_semantic),
                 (v.name for v in expr.variables if not v.is_private),
             )
         )
@@ -912,11 +914,12 @@ class FCodePrinter(CodePrinter):
                 "end interface\n"
             )
         else:
+            private_decorator = pyccel_decorator_funcs["private"]
             interfaces = "\n".join(self._print(i) for i in expr.interfaces)
             public_decs += "".join(
                 f"public :: {i.name}\n"
                 for i in expr.interfaces
-                if i.is_semantic and not i.is_private
+                if i.is_semantic and (private_decorator not in i.decorators)
             )
 
         func_strings = []
@@ -2925,8 +2928,8 @@ class FCodePrinter(CodePrinter):
                 arg_decs - The code necessary to declare the arguments of the function/subroutine.
                 func_type - Subroutine or function.
         """
-        is_pure = expr.is_pure
-        is_elemental = expr.is_elemental
+        is_pure = pyccel_decorator_funcs["pure"] in expr.decorators
+        is_elemental = pyccel_decorator_funcs["elemental"] in expr.decorators
         out_args = [
             v
             for v in expr.scope.collect_all_tuple_elements(expr.results.var)
