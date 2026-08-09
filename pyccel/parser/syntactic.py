@@ -1578,7 +1578,7 @@ class SyntaxParser(BasicParser):
             self.exit_function_scope()
 
             imports = [i for i in body if isinstance(i, Import)]
-            functions = [l for l in body if isinstance(l, FunctionDef)]
+            functions = [l for l in body if isinstance(l, FunctionDef) and not isinstance(l, InlineFunctionDef)]
             classes = [l for l in body if isinstance(l, ClassDef)]
             if classes:
                 errors.report(

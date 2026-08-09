@@ -6737,6 +6737,28 @@ class SemanticParser(BasicParser):
 
         return EmptyNode()
 
+    def _visit_InlineFunctionDef(self, expr):
+        """
+        Visit an InlineFunctionDef.
+
+        An InlineFunctionDef should only be defined in the syntactic stage for a
+        lambda function.
+
+        Parameters
+        ----------
+        expr : InlineFunctionDef
+            The inline function definition being visited.
+        """
+        assert expr.pyccel_staging != "semantic"
+        args, kwargs = expr.__getnewargs_ex__()
+        decorators = [self._visit(d) for d in expr.decorators]
+        decorators.append(pyccel_decorator_funcs["inline"])
+        kwargs["decorators"] = decorators
+        kwargs["syntactic_expr"] = expr
+        new_func = InlineFunctionDef(*args, **kwargs)
+        self.insert_function(new_func, self.scope)
+        return new_func
+
     def _visit_InlineFunctionCall(self, expr, function_call_args, function_call):
         """
         Visit an inline function definition to add the code to the calling scope.
