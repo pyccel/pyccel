@@ -577,10 +577,11 @@ def collect_loops(block, indices, new_index, language_has_vectors=False, result=
 
             # Find all elemental function calls. Normally function call arguments are not indexed
             # However elemental functions are an exception
+            elemental_decorator = pyccel_decorator_funcs["elemental"]
             elemental_func_calls = [
                 f
                 for f in notable_nodes
-                if (isinstance(f, FunctionCall) and f.funcdef.is_elemental)
+                if (isinstance(f, FunctionCall) and elemental_decorator in f.funcdef.decorators)
             ]
             elemental_func_calls += [
                 f
