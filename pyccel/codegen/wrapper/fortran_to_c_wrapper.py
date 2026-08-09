@@ -212,7 +212,11 @@ class FortranToCWrapper(Wrapper):
 
         # Wrap contents
         private_decorator = pyccel_decorator_funcs["private"]
-        funcs_to_wrap = [f for f in expr.funcs if f.is_semantic and private_decorator not in f.decorators]
+        funcs_to_wrap = [
+            f
+            for f in expr.funcs
+            if f.is_semantic and private_decorator not in f.decorators
+        ]
 
         funcs = [self._wrap(f) for f in funcs_to_wrap]
         if expr.init_func:

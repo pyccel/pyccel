@@ -35,6 +35,8 @@ class PythonProperty(TypedAstNode):
 
 # ==============================================================================
 
-pyccel_decorator_funcs = {d: PyccelFunctionDef(d, PyccelFunction) for d in pyccel_decorators.__all__}
+pyccel_decorator_funcs = {
+    d: PyccelFunctionDef(d, PyccelFunction) for d in pyccel_decorators.__all__
+}
 
 property_decorator_func = PyccelFunctionDef("property", PythonProperty)

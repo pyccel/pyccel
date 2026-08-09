@@ -326,15 +326,9 @@ NumpyArrayClass = ClassDef(
             "transpose",
             func_class=NumpyTranspose,
         ),
-        PyccelFunctionDef(
-            "sum", func_class=NumpySum
-        ),
-        PyccelFunctionDef(
-            "min", func_class=NumpyAmin
-        ),
-        PyccelFunctionDef(
-            "max", func_class=NumpyAmax
-        ),
+        PyccelFunctionDef("sum", func_class=NumpySum),
+        PyccelFunctionDef("min", func_class=NumpyAmin),
+        PyccelFunctionDef("max", func_class=NumpyAmax),
         PyccelFunctionDef(
             "imag",
             func_class=NumpyImag,

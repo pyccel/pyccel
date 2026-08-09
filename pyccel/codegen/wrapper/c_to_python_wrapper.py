@@ -1796,8 +1796,12 @@ class CToPythonWrapper(Wrapper):
         funcs_to_wrap = [
             f for f in expr.funcs if f not in (expr.init_func, expr.free_func)
         ]
-        private_decorator = pyccel_decorator_funcs['private']
-        funcs_to_wrap = [f for f in funcs_to_wrap if f.is_semantic and private_decorator not in f.decorators]
+        private_decorator = pyccel_decorator_funcs["private"]
+        funcs_to_wrap = [
+            f
+            for f in funcs_to_wrap
+            if f.is_semantic and private_decorator not in f.decorators
+        ]
 
         # Add any functions removed by the Fortran printer
         removed_functions = getattr(expr, "removed_functions", None)
@@ -2105,7 +2109,7 @@ class CToPythonWrapper(Wrapper):
 
         is_bind_c_function_def = isinstance(expr, BindCFunctionDef)
 
-        private_decorator = pyccel_decorator_funcs['private']
+        private_decorator = pyccel_decorator_funcs["private"]
         if private_decorator in expr.decorators:
             self.exit_scope()
             return self._get_untranslatable_function(

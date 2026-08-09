@@ -1732,7 +1732,7 @@ class SemanticParser(BasicParser):
 
             return new_expr
         else:
-            if func.pyccel_staging != 'semantic':
+            if func.pyccel_staging != "semantic":
                 func = self._annotate_the_called_function_def(func, args)
             is_inline = pyccel_decorator_funcs["inline"] in func.decorators
             if is_inline:
@@ -1797,7 +1797,10 @@ class SemanticParser(BasicParser):
                 )
             elif isinstance(func, FunctionDef):
                 self._check_argument_compatibility(
-                    args, func_args, func, pyccel_decorator_funcs["elemental"] in func.decorators
+                    args,
+                    func_args,
+                    func,
+                    pyccel_decorator_funcs["elemental"] in func.decorators,
                 )
 
             return new_expr
@@ -4958,7 +4961,10 @@ class SemanticParser(BasicParser):
 
                 args = self._sort_function_call_args(init_method.arguments, args)
                 self._check_argument_compatibility(
-                    args, init_method.arguments, init_method, pyccel_decorator_funcs["elemental"] in init_method.decorators
+                    args,
+                    init_method.arguments,
+                    init_method,
+                    pyccel_decorator_funcs["elemental"] in init_method.decorators,
                 )
 
                 new_expr = ConstructorCall(init_method, args, cls_variable)
@@ -6425,16 +6431,14 @@ class SemanticParser(BasicParser):
 
         if is_inline and is_private:
             args, kwargs = expr.__getnewargs_ex__()
-            kwargs['decorators'] = decorators
-            new_func = InlineFunctionDef(*args, **kwargs, syntactic_expr = expr)
+            kwargs["decorators"] = decorators
+            new_func = InlineFunctionDef(*args, **kwargs, syntactic_expr=expr)
             self.insert_function(new_func, insertion_scope)
 
             return new_func
 
         if pyccel_decorator_funcs["low_level"] in decorators or (
-            self.is_stub_file
-            and not python_name.startswith("__")
-            and not is_inline
+            self.is_stub_file and not python_name.startswith("__") and not is_inline
         ):
             if pyccel_decorator_funcs["low_level"] in decorators:
                 low_level_decs = decorators["low_level"]
@@ -6454,8 +6458,8 @@ class SemanticParser(BasicParser):
         sub_funcs = []
         func_interfaces = []
         docstring = self._visit(expr.docstring) if expr.docstring else expr.docstring
-        is_pure = pyccel_decorator_funcs['pure'] in decorators
-        is_elemental = pyccel_decorator_funcs['elemental'] in decorators
+        is_pure = pyccel_decorator_funcs["pure"] in decorators
+        is_elemental = pyccel_decorator_funcs["elemental"] in decorators
 
         available_type_vars = {
             n: v for n, v in self._context_dict.items() if isinstance(v, typing.TypeVar)

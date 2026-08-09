@@ -896,7 +896,11 @@ class FCodePrinter(CodePrinter):
             f"public :: {n}\n"
             for n in chain(
                 (c.name for c in expr.classes),
-                (f.name for f in funcs_to_print if (private_decorator not in f.decorators) and f.is_semantic),
+                (
+                    f.name
+                    for f in funcs_to_print
+                    if (private_decorator not in f.decorators) and f.is_semantic
+                ),
                 (v.name for v in expr.variables if not v.is_private),
             )
         )

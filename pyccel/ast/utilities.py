@@ -507,7 +507,10 @@ def collect_loops(block, indices, new_index, language_has_vectors=False, result=
         Check if an object is a non-indexable function call returning an array.
         """
         return f.rank and (
-            (isinstance(f, FunctionCall) and (pyccel_decorator_funcs["elemental"] is not f.funcdef.decorators))
+            (
+                isinstance(f, FunctionCall)
+                and (pyccel_decorator_funcs["elemental"] is not f.funcdef.decorators)
+            )
             or (isinstance(f, PyccelFunction) and not f.is_indexable)
         )
 
@@ -581,7 +584,10 @@ def collect_loops(block, indices, new_index, language_has_vectors=False, result=
             elemental_func_calls = [
                 f
                 for f in notable_nodes
-                if (isinstance(f, FunctionCall) and elemental_decorator in f.funcdef.decorators)
+                if (
+                    isinstance(f, FunctionCall)
+                    and elemental_decorator in f.funcdef.decorators
+                )
             ]
             elemental_func_calls += [
                 f
