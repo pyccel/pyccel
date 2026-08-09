@@ -2619,7 +2619,7 @@ class FunctionDef(ScopedAstNode):
     @property
     def is_inline(self):
         """True if the function should be printed inline"""
-        assert self.is_semantic
+        assert self._is_semantic
         return False
 
     @property
