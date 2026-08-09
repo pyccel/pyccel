@@ -221,7 +221,7 @@ from pyccel.ast.type_annotations import (
     VariableTypeAnnotation,
     typenames_to_dtypes,
 )
-from pyccel.ast.typingext import TypingAnnotation, TypingFinal, TypingTypeVar
+from pyccel.ast.typingext import TypingAnnotation, TypingFinal, TypingTypeVar,typing_funcs 
 from pyccel.ast.utilities import builtin_import as pyccel_builtin_import
 from pyccel.ast.utilities import (
     builtin_import_registry as pyccel_builtin_import_registry,
@@ -6448,7 +6448,7 @@ class SemanticParser(BasicParser):
                 name = PyccelSymbol(arg.python_value)
             else:
                 name = python_name
-            if "overload" not in decorators:
+            if typing_funcs["overload"] not in decorators:
                 insertion_scope.remove_symbol(python_name)
                 insertion_scope.insert_low_level_symbol(python_name, name)
         else:
@@ -6512,7 +6512,7 @@ class SemanticParser(BasicParser):
         # this for the case of a function without arguments => no headers
         interface_name = expr.scope.get_expected_name(python_name)
         interface_counter = 0
-        is_interface = len(argument_combinations) > 1 or "overload" in decorators
+        is_interface = len(argument_combinations) > 1 or typing_funcs["overload"] in decorators
         assert (
             not is_interface
             or interface_name in insertion_scope.local_used_symbols.values()
@@ -6520,7 +6520,7 @@ class SemanticParser(BasicParser):
         for interface_idx, (arguments, type_var_idx) in enumerate(
             zip(argument_combinations, type_var_indices)
         ):
-            if is_interface and "low_level" not in decorators:
+            if is_interface and pyccel_decorator_funcs["low_level"] not in decorators:
                 name, _ = self.scope.get_new_incremented_symbol(
                     python_name, interface_idx
                 )
@@ -7065,13 +7065,14 @@ class SemanticParser(BasicParser):
             )
 
         decorators = expr.decorators
-        not_used = [d for d in decorators if d != "low_level"]
+        low_level_decorator = pyccel_decorator_funcs["low_level"]
+        not_used = [d for d in decorators if d != low_level_decorator]
         if len(not_used) >= 1:
             errors.report(
                 UNUSED_DECORATORS, symbol=", ".join(not_used), severity="warning"
             )
 
-        if "low_level" in decorators:
+        if low_level_decorator in decorators:
             self.scope.remove_symbol(expr.name)
             low_level_decs = decorators["low_level"]
             assert len(low_level_decs) == 1
