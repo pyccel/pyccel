@@ -1732,7 +1732,7 @@ class SemanticParser(BasicParser):
 
             return new_expr
         else:
-            if not func.is_semantic:
+            if func.pyccel_staging != 'semantic':
                 func = self._annotate_the_called_function_def(func, args)
             is_inline = pyccel_decorator_funcs["inline"] in func.decorators
             if is_inline:

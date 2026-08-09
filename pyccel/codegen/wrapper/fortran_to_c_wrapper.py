@@ -63,6 +63,7 @@ from pyccel.ast.datatypes import (
     PythonNativeInt,
     TupleType,
 )
+from pyccel.ast.decorators import pyccel_decorator_funcs
 from pyccel.ast.internals import Slice
 from pyccel.ast.literals import LiteralInteger, LiteralString, LiteralTrue, Nil
 from pyccel.ast.numpyext import NumpyInt32
@@ -210,7 +211,8 @@ class FortranToCWrapper(Wrapper):
         self.scope = mod_scope
 
         # Wrap contents
-        funcs_to_wrap = [f for f in expr.funcs if f.is_semantic and not f.is_private]
+        private_decorator = pyccel_decorator_funcs["private"]
+        funcs_to_wrap = [f for f in expr.funcs if f.is_semantic and private_decorator not in f.decorators]
 
         funcs = [self._wrap(f) for f in funcs_to_wrap]
         if expr.init_func:
@@ -287,7 +289,7 @@ class FortranToCWrapper(Wrapper):
         BindCFunctionDef
             The C-compatible function.
         """
-        if expr.is_private or not expr.is_semantic:
+        if pyccel_decorator_funcs["private"] in expr.decorators or not expr.is_semantic:
             return EmptyNode()
 
         orig_name = expr.cls_name or expr.name
