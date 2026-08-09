@@ -2827,6 +2827,16 @@ class InlineFunctionDef(FunctionDef):
         """
         return self._syntactic_expr
 
+    @property
+    def is_semantic(self):
+        """
+        Indicates if the function was created with semantic information.
+
+        Indicates if the function has been annotated with type descriptors
+        in the semantic stage.
+        """
+        return self._is_semantic and self._syntactic_expr.body is not self.body
+
     def swap_in_args(self, args, new_local_vars):
         """Modify the body of the function by replacing the arguments
         and local variables with the provided arguments and local variables
