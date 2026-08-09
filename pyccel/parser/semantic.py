@@ -4923,15 +4923,15 @@ class SemanticParser(BasicParser):
 
             if init_method is not None:
                 if not init_method.is_semantic:
+                    init_method = self._annotate_the_called_function_def(
+                        init_method, args
+                    )
                     if init_method.is_inline:
                         errors.report(
                             "An __init__ method cannot be inlined",
                             severity="fatal",
                             symbol=expr,
                         )
-                    init_method = self._annotate_the_called_function_def(
-                        init_method, args
-                    )
 
                 if isinstance(lhs, AnnotatedPyccelSymbol):
                     annotation = self._visit(lhs.annotation)
@@ -4958,7 +4958,7 @@ class SemanticParser(BasicParser):
 
                 args = self._sort_function_call_args(init_method.arguments, args)
                 self._check_argument_compatibility(
-                    args, init_method.arguments, init_method, init_method.is_elemental
+                    args, init_method.arguments, init_method, pyccel_decorator_funcs["elemental"] in init_method.decorators
                 )
 
                 new_expr = ConstructorCall(init_method, args, cls_variable)
