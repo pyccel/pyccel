@@ -135,7 +135,7 @@ from pyccel.ast.datatypes import (
     VoidType,
     original_type_to_pyccel_type,
 )
-from pyccel.ast.decorators import pyccel_decorator_funcs, PythonProperty
+from pyccel.ast.decorators import pyccel_decorator_funcs, property_decorator_func
 from pyccel.ast.functionalexpr import (
     FunctionalFor,
     FunctionalMax,
@@ -4682,7 +4682,10 @@ class SemanticParser(BasicParser):
             # class property?
             else:
                 method = cls_base.get_method(rhs_name, expr)
-                assert PythonProperty in method.decorators
+                if method.pyccel_staging != "semantic":
+                    self._visit(method)
+                    method = cls_base.get_method(rhs_name, expr)
+                assert property_decorator_func in method.decorators
                 if cls_base.name == "numpy.ndarray":
                     numpy_class = method.cls_name
                     self.insert_import("numpy", AsName(numpy_class, numpy_class.name))
@@ -6365,6 +6368,9 @@ class SemanticParser(BasicParser):
             expr = Return(results, CodeBlock(code))
         else:
             expr = Return(results)
+        return expr
+
+    def _visit_PyccelFunctionDef(self, expr):
         return expr
 
     def _visit_FunctionDef(self, expr):

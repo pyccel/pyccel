@@ -70,6 +70,7 @@ from pyccel.ast.core import (
     With,
 )
 from pyccel.ast.datatypes import FinalType, TypeAlias
+from pyccel.ast.decorators import property_decorator_func
 from pyccel.ast.functionalexpr import (
     FunctionalFor,
     FunctionalMax,
@@ -905,6 +906,8 @@ class SyntaxParser(BasicParser):
             )
 
     def _visit_Name(self, stmt):
+        if stmt.id == 'property':
+            return property_decorator_func
         name = PyccelSymbol(stmt.id)
         if self._in_lhs_assign:
             self.scope.insert_symbol(name)
