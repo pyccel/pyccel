@@ -20,7 +20,6 @@ def test_int_default(epyc_types_mod):
     b = randint(low=0, high=1e9, dtype=int)  # positive
 
     assert f1(a) == f2(a)
-    assert f1(b) == f2(b)
     assert type(f1(a)) is type(f2(a))
     assert f1(b) == f2(b)
     assert type(f1(b)) is type(f2(b))
