@@ -38,14 +38,7 @@ def test_local_wrong_type_annotation(language):
 
 
 def test_allow_negative_index_annotation(epyc_variable_annotations_mod):
-    def allow_negative_index_annotation():
-        import numpy as np
-
-        array: "int[:](order=C)"
-        array = np.array([1, 2, 3, 4, 5])
-        j = -3
-        return array[j]
-
+    allow_negative_index_annotation = variable_annotations.allow_negative_index_annotation
     epyc_allow_negative_index_annotation = (
         epyc_variable_annotations_mod.allow_negative_index_annotation
     )
@@ -57,13 +50,7 @@ def test_allow_negative_index_annotation(epyc_variable_annotations_mod):
 
 
 def test_stack_array_annotation(epyc_variable_annotations_mod):
-    def stack_array_annotation():
-        import numpy as np
-
-        array: "int[:,:]"
-        array = np.array([[1, 2], [3, 4], [5, 6]])
-        return array[2, 0]
-
+    stack_array_annotation = variable_annotations.stack_array_annotation
     epyc_stack_array_annotation = epyc_variable_annotations_mod.stack_array_annotation
 
     assert epyc_stack_array_annotation() == stack_array_annotation()
@@ -97,13 +84,7 @@ def test_local_wrong_type_annotation_3(language):
 
 
 def test_allow_negative_index_annotation_2(epyc_variable_annotations_mod):
-    def allow_negative_index_annotation():
-        import numpy as np
-
-        array: "int[:](order=C)" = np.array([1, 2, 3, 4, 5])
-        j = -3
-        return array[j]
-
+    allow_negative_index_annotation = variable_annotations.allow_negative_index_annotation_2
     epyc_allow_negative_index_annotation = (
         epyc_variable_annotations_mod.allow_negative_index_annotation_2
     )
@@ -115,12 +96,7 @@ def test_allow_negative_index_annotation_2(epyc_variable_annotations_mod):
 
 
 def test_stack_array_annotation_2(epyc_variable_annotations_mod):
-    def stack_array_annotation():
-        import numpy as np
-
-        array: "int[:,:]" = np.array([[1, 2], [3, 4], [5, 6]])
-        return array[2, 0]
-
+    stack_array_annotation = variable_annotations.stack_array_annotation_2
     epyc_stack_array_annotation = epyc_variable_annotations_mod.stack_array_annotation_2
 
     assert epyc_stack_array_annotation() == stack_array_annotation()
