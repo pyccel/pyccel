@@ -125,9 +125,15 @@ def test_homogeneous_tuple_annotation(epyc_variable_annotations_mod):
         epyc_variable_annotations_mod.homogeneous_tuple_annotation
     )
 
-    assert epyc_homogeneous_tuple_annotation() == homogeneous_tuple_annotation()
+    orig_output = homogeneous_tuple_annotation()
+    epyc_output = epyc_homogeneous_tuple_annotation()
+
+    assert epyc_output == orig_output
     assert isinstance(
-        epyc_homogeneous_tuple_annotation(), type(homogeneous_tuple_annotation())
+        epyc_output, type(orig_output)
+    )
+    assert isinstance(
+        epyc_output[0], type(orig_output[0])
     )
 
 
@@ -137,9 +143,15 @@ def test_homogeneous_tuple_2_annotation(epyc_variable_annotations_mod):
         epyc_variable_annotations_mod.homogeneous_tuple_2_annotation
     )
 
-    assert epyc_homogeneous_tuple_annotation() == homogeneous_tuple_annotation()
+    orig_output = homogeneous_tuple_annotation()
+    epyc_output = epyc_homogeneous_tuple_annotation()
+
+    assert epyc_output == orig_output
     assert isinstance(
-        epyc_homogeneous_tuple_annotation(), type(homogeneous_tuple_annotation())
+        epyc_output, type(orig_output)
+    )
+    assert isinstance(
+        epyc_output[0], type(orig_output[0])
     )
 
 
@@ -149,9 +161,15 @@ def test_homogeneous_tuple_annotation_str(epyc_variable_annotations_mod):
         epyc_variable_annotations_mod.homogeneous_tuple_annotation_str
     )
 
-    assert epyc_homogeneous_tuple_annotation() == homogeneous_tuple_annotation()
+    orig_output = homogeneous_tuple_annotation()
+    epyc_output = epyc_homogeneous_tuple_annotation()
+
+    assert epyc_output == orig_output
     assert isinstance(
-        epyc_homogeneous_tuple_annotation(), type(homogeneous_tuple_annotation())
+        epyc_output, type(orig_output)
+    )
+    assert isinstance(
+        epyc_output[0], type(orig_output[0])
     )
 
 
@@ -163,9 +181,15 @@ def test_homogeneous_tuple_2_annotation_str(epyc_variable_annotations_mod):
         epyc_variable_annotations_mod.homogeneous_tuple_2_annotation_str
     )
 
-    assert epyc_homogeneous_tuple_annotation() == homogeneous_tuple_annotation()
+    orig_output = homogeneous_tuple_annotation()
+    epyc_output = epyc_homogeneous_tuple_annotation()
+
+    assert epyc_output == orig_output
     assert isinstance(
-        epyc_homogeneous_tuple_annotation(), type(homogeneous_tuple_annotation())
+        epyc_output, type(orig_output)
+    )
+    assert isinstance(
+        epyc_output[0], type(orig_output[0])
     )
 
 
@@ -262,17 +286,31 @@ def test_homogeneous_list_annotation_int(epyc_variable_annotations_mod):
     epyc_homogeneous_list_annotation = (
         epyc_variable_annotations_mod.homogeneous_list_annotation_int
     )
-    assert epyc_homogeneous_list_annotation() == homogeneous_list_annotation()
+    orig_output = homogeneous_list_annotation()
+    epyc_output = epyc_homogeneous_list_annotation()
+
+    assert epyc_output == orig_output
     assert isinstance(
-        epyc_homogeneous_list_annotation(), type(homogeneous_list_annotation())
+        epyc_output, type(orig_output)
+    )
+    assert isinstance(
+        epyc_output[0], type(orig_output[0])
     )
 
 
 def test_homogeneous_list_without_annotation(epyc_variable_annotations_mod):
     homogeneous_list = variable_annotations.homogeneous_list
     epyc_homogeneous_list = epyc_variable_annotations_mod.homogeneous_list
-    assert epyc_homogeneous_list() == homogeneous_list()
-    assert isinstance(epyc_homogeneous_list(), type(homogeneous_list()))
+    orig_output = homogeneous_list_annotation()
+    epyc_output = epyc_homogeneous_list_annotation()
+
+    assert epyc_output == orig_output
+    assert isinstance(
+        epyc_output, type(orig_output)
+    )
+    assert isinstance(
+        epyc_output[0], type(orig_output[0])
+    )
 
 
 def test_homogeneous_list_annotation_float(epyc_variable_annotations_mod):
@@ -280,9 +318,15 @@ def test_homogeneous_list_annotation_float(epyc_variable_annotations_mod):
     epyc_homogeneous_list_annotation = (
         epyc_variable_annotations_mod.homogeneous_list_annotation_float
     )
-    assert epyc_homogeneous_list_annotation() == homogeneous_list_annotation()
+    orig_output = homogeneous_list_annotation()
+    epyc_output = epyc_homogeneous_list_annotation()
+
+    assert epyc_output == orig_output
     assert isinstance(
-        epyc_homogeneous_list_annotation(), type(homogeneous_list_annotation())
+        epyc_output, type(orig_output)
+    )
+    assert isinstance(
+        epyc_output[0], type(orig_output[0])
     )
 
 
@@ -293,12 +337,15 @@ def test_homogeneous_list_annotation_float64(epyc_variable_annotations_mod):
     epyc_homogeneous_list_annotation = (
         epyc_variable_annotations_mod.homogeneous_list_annotation_float64
     )
-    assert epyc_homogeneous_list_annotation() == homogeneous_list_annotation()
+    orig_output = homogeneous_list_annotation()
+    epyc_output = epyc_homogeneous_list_annotation()
+
+    assert epyc_output == orig_output
     assert isinstance(
-        epyc_homogeneous_list_annotation(), type(homogeneous_list_annotation())
+        epyc_output, type(orig_output)
     )
     assert isinstance(
-        epyc_homogeneous_list_annotation()[0], type(homogeneous_list_annotation()[0])
+        epyc_output[0], type(orig_output[0])
     )
 
 
@@ -307,9 +354,15 @@ def test_homogeneous_list_annotation_bool(epyc_variable_annotations_mod):
     epyc_homogeneous_list_annotation = (
         epyc_variable_annotations_mod.homogeneous_list_annotation_bool
     )
-    assert epyc_homogeneous_list_annotation() == homogeneous_list_annotation()
+    orig_output = homogeneous_list_annotation()
+    epyc_output = epyc_homogeneous_list_annotation()
+
+    assert epyc_output == orig_output
     assert isinstance(
-        epyc_homogeneous_list_annotation(), type(homogeneous_list_annotation())
+        epyc_output, type(orig_output)
+    )
+    assert isinstance(
+        epyc_output[0], type(orig_output[0])
     )
 
 
@@ -320,9 +373,15 @@ def test_homogeneous_list_annotation_complex(epyc_variable_annotations_mod):
     epyc_homogeneous_list_annotation = (
         epyc_variable_annotations_mod.homogeneous_list_annotation_complex
     )
-    assert epyc_homogeneous_list_annotation() == homogeneous_list_annotation()
+    orig_output = homogeneous_list_annotation()
+    epyc_output = epyc_homogeneous_list_annotation()
+
+    assert epyc_output == orig_output
     assert isinstance(
-        epyc_homogeneous_list_annotation(), type(homogeneous_list_annotation())
+        epyc_output, type(orig_output)
+    )
+    assert isinstance(
+        epyc_output[0], type(orig_output[0])
     )
 
 
