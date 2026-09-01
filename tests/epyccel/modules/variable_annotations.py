@@ -81,13 +81,13 @@ def homogeneous_tuple_2_annotation_str():
     return a[0][0], a[1][0], a[0][2]
 
 
-def homogeneous_set_annotation():
+def homogeneous_set_annotation_int():
     a: set[int]
     a = {1, 2, 3, 4}
     return len(a)
 
 
-def homogeneous_set():
+def homogeneous_set_without_annotation():
     a = {1, 2, 3, 4}
     return len(a)
 
@@ -116,7 +116,7 @@ def empty_homogeneous_set_annotation_int():
     return len(a)
 
 
-def homogeneous_list_annotation():
+def homogeneous_empty_list_annotation_int():
     a: list[int]
     a = []
     return len(a)

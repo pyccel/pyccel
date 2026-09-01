@@ -170,9 +170,9 @@ def test_homogeneous_tuple_2_annotation_str(epyc_variable_annotations_mod):
 
 
 def test_homogeneous_set_annotation_int(epyc_variable_annotations_mod):
-    homogeneous_set_annotation = variable_annotations.homogeneous_set_annotation
+    homogeneous_set_annotation = variable_annotations.homogeneous_set_annotation_int
     epyc_homogeneous_set_annotation = (
-        epyc_variable_annotations_mod.homogeneous_set_annotation
+        epyc_variable_annotations_mod.homogeneous_set_annotation_int
     )
     assert epyc_homogeneous_set_annotation() == homogeneous_set_annotation()
     assert isinstance(
@@ -181,8 +181,8 @@ def test_homogeneous_set_annotation_int(epyc_variable_annotations_mod):
 
 
 def test_homogeneous_set_without_annotation(epyc_variable_annotations_mod):
-    homogeneous_set = variable_annotations.homogeneous_set
-    epyc_homogeneous_set = epyc_variable_annotations_mod.homogeneous_set
+    homogeneous_set = variable_annotations.homogeneous_set_without_annotation
+    epyc_homogeneous_set = epyc_variable_annotations_mod.homogeneous_set_without_annotation
     assert epyc_homogeneous_set() == homogeneous_set()
     assert isinstance(epyc_homogeneous_set(), type(homogeneous_set()))
 
@@ -234,9 +234,9 @@ def test_empty_homogeneous_set_annotation_int(epyc_variable_annotations_mod):
 
 
 def test_homogeneous_empty_list_annotation_int(epyc_variable_annotations_mod):
-    homogeneous_list_annotation = variable_annotations.homogeneous_list_annotation
+    homogeneous_list_annotation = variable_annotations.homogeneous_empty_list_annotation_int
     epyc_homogeneous_list_annotation = (
-        epyc_variable_annotations_mod.homogeneous_list_annotation
+        epyc_variable_annotations_mod.homogeneous_empty_list_annotation_int
     )
     assert epyc_homogeneous_list_annotation() == homogeneous_list_annotation()
     assert isinstance(
