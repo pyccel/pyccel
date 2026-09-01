@@ -164,7 +164,6 @@ def test_creation_in_loop_stack(language):
 # ==============================================================================
 def test_creation_in_if_heap(epyc_arrays_multiple_assignments_mod):
 
-    # TODO: check if we get the correct Pyccel warning
     f = arrays_multiple_assignments.creation_in_if_heap
     g = epyc_arrays_multiple_assignments_mod.creation_in_if_heap
 
