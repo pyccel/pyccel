@@ -320,8 +320,8 @@ def test_homogeneous_list_annotation_int(epyc_variable_annotations_mod):
 def test_homogeneous_list_without_annotation(epyc_variable_annotations_mod):
     homogeneous_list = variable_annotations.homogeneous_list
     epyc_homogeneous_list = epyc_variable_annotations_mod.homogeneous_list
-    orig_output = homogeneous_list_annotation()
-    epyc_output = epyc_homogeneous_list_annotation()
+    orig_output = homogeneous_list()
+    epyc_output = epyc_homogeneous_list()
 
     assert epyc_output == orig_output
     assert isinstance(
@@ -443,7 +443,6 @@ def test_dict_empty_init(epyc_variable_annotations_mod):
 def test_dict_complex_float(epyc_variable_annotations_mod):
     dict_complex_float = variable_annotations.dict_complex_float
     epyc_dict_complex_float = epyc_variable_annotations_mod.dict_complex_float
-    assert epyc_dict_int_float() == dict_int_float()
 
     orig_output = dict_complex_float()
     epyc_output = epyc_dict_complex_float()
