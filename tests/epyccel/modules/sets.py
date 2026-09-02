@@ -2,19 +2,19 @@
 from typing import Final, TypeVar
 
 
-def add_int():
+def add_literal_int():
     a = {1, 3, 45}
     a.add(4)
     return len(a)
 
 
-def add_complex():
+def add_literal_complex():
     a = {6j, 7j, 8j}
     a.add(9j)
     return len(a)
 
 
-def add_element_range():
+def add_variable_int():
     a = {1, 2, 3}
     for i in range(50, 100):
         a.add(i)

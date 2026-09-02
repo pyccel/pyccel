@@ -37,26 +37,26 @@ def python_only_language(request):
 
 
 def test_add_literal_int(epyc_sets_mod):
-    add_int = sets.add_int
-    epyc_add_element = epyc_sets_mod.add_int
-    pyccel_result = epyc_add_element()
-    python_result = add_int()
+    add_literal_int = sets.add_literal_int
+    epyc_add_literal_int = epyc_sets_mod.add_literal_int
+    pyccel_result = epyc_add_literal_int()
+    python_result = add_literal_int()
     assert python_result == pyccel_result
 
 
 def test_add_literal_complex(epyc_sets_mod):
-    add_complex = sets.add_complex
-    epyc_add_element = epyc_sets_mod.add_complex
-    pyccel_result = epyc_add_element()
-    python_result = add_complex()
+    add_literal_complex = sets.add_literal_complex
+    epyc_add_literal_complex = epyc_sets_mod.add_literal_complex
+    pyccel_result = epyc_add_literal_complex()
+    python_result = add_literal_complex()
     assert python_result == pyccel_result
 
 
 def test_add_variable_int(epyc_sets_mod):
-    add_element_range = sets.add_element_range
-    epyc_add_element = epyc_sets_mod.add_element_range
-    pyccel_result = epyc_add_element()
-    python_result = add_element_range()
+    add_variable_int = sets.add_variable_int
+    epyc_add_variable_int = epyc_sets_mod.add_variable_int
+    pyccel_result = epyc_add_variable_int()
+    python_result = add_variable_int()
     assert python_result == pyccel_result
 
 
