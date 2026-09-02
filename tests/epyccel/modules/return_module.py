@@ -42,11 +42,11 @@ def return_single_var(x: "int"):
     return x
 
 
-def return_scalare():
+def return_scalar():
     return 5
 
 
-def multi_return_scalare():
+def multi_return_scalar():
     return 5, 7
 
 
@@ -58,7 +58,7 @@ def multi_return_vars_expr(a: "int", b: "int"):
     return (a - b), (a + b)
 
 
-def scalare_multi_return_stmts(a: "int"):
+def scalar_multi_return_stmts(a: "int"):
     a = 7
     if a:
         return 1

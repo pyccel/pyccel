@@ -52,17 +52,17 @@ def test_return_single_var(epyc_return_mod):
 
 
 @pytest.mark.skip_llvm
-def test_return_scalare(epyc_return_mod):
-    return_scalare = return_module.return_scalare
-    epyc_return_scalare = epyc_return_mod.return_scalare
-    assert epyc_return_scalare() == return_scalare()
+def test_return_scalar(epyc_return_mod):
+    return_scalar = return_module.return_scalar
+    epyc_return_scalar = epyc_return_mod.return_scalar
+    assert epyc_return_scalar() == return_scalar()
 
 
 @pytest.mark.skip_llvm
-def test_multi_return_scalare(epyc_return_mod):
-    multi_return_scalare = return_module.multi_return_scalare
-    epyc_multi_return_scalare = epyc_return_mod.multi_return_scalare
-    assert epyc_multi_return_scalare() == multi_return_scalare()
+def test_multi_return_scalar(epyc_return_mod):
+    multi_return_scalar = return_module.multi_return_scalar
+    epyc_multi_return_scalar = epyc_return_mod.multi_return_scalar
+    assert epyc_multi_return_scalar() == multi_return_scalar()
 
 
 @pytest.mark.skip_llvm
@@ -80,10 +80,10 @@ def test_multi_return_vars_expr(epyc_return_mod):
 
 
 @pytest.mark.skip_llvm
-def test_scalare_multi_return_stmts(epyc_return_mod):
-    scalare_multi_return_stmts = return_module.scalare_multi_return_stmts
-    epyc_scalare_multi_return_stmts = epyc_return_mod.scalare_multi_return_stmts
-    assert epyc_scalare_multi_return_stmts(7) == scalare_multi_return_stmts(7)
+def test_scalar_multi_return_stmts(epyc_return_mod):
+    scalar_multi_return_stmts = return_module.scalar_multi_return_stmts
+    epyc_scalar_multi_return_stmts = epyc_return_mod.scalar_multi_return_stmts
+    assert epyc_scalar_multi_return_stmts(7) == scalar_multi_return_stmts(7)
 
 
 @pytest.mark.skip_llvm
