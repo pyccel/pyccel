@@ -20,10 +20,6 @@ def pow_i_r(x: "int", y: "float"):
     return x**y
 
 
-def pow_sp(x: "float", y: "float"):
-    return x**y
-
-
 def pow_c_c(x: "complex", y: "complex"):
     return x**y
 

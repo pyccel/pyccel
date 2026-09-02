@@ -59,11 +59,11 @@ def test_pow_int_real(epyc_pow_mod):
 
 
 def test_pow_special_cases(epyc_pow_mod):
-    pow_sp = pow_mod.pow_sp
-    f = epyc_pow_mod.pow_sp
+    pow_r_r = pow_mod.pow_r_r
+    epyc_pow_r_r = epyc_pow_mod.pow_r_r
     e = uniform(high=1e6)
-    assert isclose(f(0.0, e), pow_sp(0.0, e), rtol=RTOL, atol=ATOL)
-    assert isclose(f(0.0, e), pow_sp(0.0, e), rtol=RTOL, atol=ATOL)
+    assert isclose(epyc_pow_r_r(0.0, e), pow_r_r(0.0, e), rtol=RTOL, atol=ATOL)
+    assert isclose(epyc_pow_r_r(0.0, e), pow_r_r(0.0, e), rtol=RTOL, atol=ATOL)
 
 
 # ---------------------------- Complex numbers ----------------------------- #
