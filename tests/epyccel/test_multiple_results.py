@@ -1,34 +1,36 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
-from pyccel.decorators import pure
+import pytest
+from modules import multiple_results
 
-from epyccel_utilities import compare_epyccel
+from epyccel_utilities import compare_epyccel, epyccel_module_with_fallback
+
+# ==============================================================================
+
+
+@pytest.fixture(scope="module")
+def epyc_multiple_results_mod(language):
+    return epyccel_module_with_fallback(multiple_results, language)
 
 
 # ==============================================================================
-def test_const_int_float(language):
-
-    @pure
-    def const_int_float():
-        return 1, 3.4
-
-    compare_epyccel(const_int_float, language)
+def test_const_int_float(epyc_multiple_results_mod):
+    compare_epyccel(
+        multiple_results.const_int_float, epyc_multiple_results_mod.const_int_float
+    )
 
 
 # ...
-def test_const_complex_bool_int(language):
-
-    @pure
-    def const_complex_bool_int():
-        return 1 + 2j, False, 8
-
-    compare_epyccel(const_complex_bool_int, language)
+def test_const_complex_bool_int(epyc_multiple_results_mod):
+    compare_epyccel(
+        multiple_results.const_complex_bool_int,
+        epyc_multiple_results_mod.const_complex_bool_int,
+    )
 
 
 # ...
-def test_expr_float_int_bool(language):
-
-    @pure
-    def expr_complex_int_bool(n: "int"):
-        return 0.5 + n * 1j, 2 * n, n == 3
-
-    compare_epyccel(expr_complex_int_bool, language, 3)
+def test_expr_complex_int_bool(epyc_multiple_results_mod):
+    compare_epyccel(
+        multiple_results.expr_complex_int_bool,
+        epyc_multiple_results_mod.expr_complex_int_bool,
+        3,
+    )

@@ -1,37 +1,35 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
-from typing import TypeVar
-
 import numpy as np
 import pytest
+from modules import builtins_mod
 from numpy.random import randint, uniform
 
 from pyccel import epyccel
 
+from epyccel_utilities import epyccel_module_with_fallback
 from tolerances import ATOL, RTOL, max_float, max_int, min_float, min_int
 
-T = TypeVar("T", int, float)
-T2 = TypeVar("T2", int, float, complex)
+
+@pytest.fixture(scope="module")
+def epyc_builtins_mod(language):
+    return epyccel_module_with_fallback(builtins_mod, language)
 
 
-def test_abs_i(language):
-    def f1(x: "int"):
-        return abs(x)
-
-    f2 = epyccel(f1, language=language)
+def test_abs_i(epyc_builtins_mod):
+    f1 = builtins_mod.abs_i
+    f2 = epyc_builtins_mod.abs_i
 
     negative_test = randint(min_int, 0)
     positive_test = randint(0, max_int)
 
-    assert np.isclose(f1(0), f2(0), rtol=RTOL, atol=ATOL)
-    assert np.isclose(f1(negative_test), f2(negative_test), rtol=RTOL, atol=ATOL)
-    assert np.isclose(f1(positive_test), f2(positive_test), rtol=RTOL, atol=ATOL)
+    assert f1(0) == f2(0)
+    assert f1(negative_test) == f2(negative_test)
+    assert f1(positive_test) == f2(positive_test)
 
 
-def test_abs_r(language):
-    def f1(x: "float"):
-        return abs(x)
-
-    f2 = epyccel(f1, language=language)
+def test_abs_r(epyc_builtins_mod):
+    f1 = builtins_mod.abs_r
+    f2 = epyc_builtins_mod.abs_r
 
     negative_test = uniform(min_float, 0.0)
     positive_test = uniform(0.0, max_float)
@@ -41,11 +39,9 @@ def test_abs_r(language):
     assert np.isclose(f1(positive_test), f2(positive_test), rtol=RTOL, atol=ATOL)
 
 
-def test_abs_c(language):
-    def f1(x: "complex"):
-        return abs(x)
-
-    f2 = epyccel(f1, language=language)
+def test_abs_c(epyc_builtins_mod):
+    f1 = builtins_mod.abs_c
+    f2 = epyc_builtins_mod.abs_c
 
     max_compl_abs = np.sqrt(max_float / 2)
     min_compl_abs = np.sqrt(-min_float / 2)
@@ -66,55 +62,45 @@ def test_abs_c(language):
     assert np.isclose(f1(0j + 0), f2(0j + 0), rtol=RTOL, atol=ATOL)
 
 
-def test_min_2_args_i(language):
-    def f(x: "int", y: "int"):
-        return min(x, y)
-
-    epyc_f = epyccel(f, language=language)
+def test_min_2_args_i(epyc_builtins_mod):
+    f = builtins_mod.min_2_args_i
+    epyc_f = epyc_builtins_mod.min_2_args_i
 
     int_args = [randint(min_int, max_int) for _ in range(2)]
 
     assert epyc_f(*int_args) == f(*int_args)
 
 
-def test_min_2_args_i_adhoc(language):
-    def f(x: int):
-        return min(x, 0)
-
-    epyc_f = epyccel(f, language=language)
+def test_min_2_args_i_adhoc(epyc_builtins_mod):
+    f = builtins_mod.min_2_args_i_adhoc
+    epyc_f = epyc_builtins_mod.min_2_args_i_adhoc
 
     int_arg = randint(min_int, max_int)
 
     assert epyc_f(int_arg) == f(int_arg)
 
 
-def test_min_2_args_f_adhoc(language):
-    def f(x: float):
-        return min(x, 0.0)
-
-    epyc_f = epyccel(f, language=language)
+def test_min_2_args_f_adhoc(epyc_builtins_mod):
+    f = builtins_mod.min_2_args_f_adhoc
+    epyc_f = epyc_builtins_mod.min_2_args_f_adhoc
 
     float_arg = uniform(min_float / 2, max_float / 2)
 
     assert np.isclose(epyc_f(float_arg), f(float_arg), rtol=RTOL, atol=ATOL)
 
 
-def test_min_2_args_f(language):
-    def f(x: "float", y: "float"):
-        return min(x, y)
-
-    epyc_f = epyccel(f, language=language)
+def test_min_2_args_f(epyc_builtins_mod):
+    f = builtins_mod.min_2_args_f
+    epyc_f = epyc_builtins_mod.min_2_args_f
 
     float_args = [uniform(min_float / 2, max_float / 2) for _ in range(2)]
 
     assert np.isclose(epyc_f(*float_args), f(*float_args), rtol=RTOL, atol=ATOL)
 
 
-def test_min_3_args(language):
-    def f(x: T, y: T, z: T):
-        return min(x, y, z)
-
-    epyc_f = epyccel(f, language=language)
+def test_min_3_args(epyc_builtins_mod):
+    f = builtins_mod.min_3_args
+    epyc_f = epyc_builtins_mod.min_3_args
 
     int_args = [randint(min_int, max_int) for _ in range(3)]
     float_args = [uniform(min_float / 2, max_float / 2) for _ in range(3)]
@@ -123,41 +109,27 @@ def test_min_3_args(language):
     assert np.isclose(epyc_f(*float_args), f(*float_args), rtol=RTOL, atol=ATOL)
 
 
-def test_min_if(language):
-    def f(x: "int", y: "int"):
-        if min(x + x + y, x + y + y) < (x + y):
-            return x + y
-        else:
-            return x - y
-
-    epyc_f = epyccel(f, language=language)
+def test_min_if(epyc_builtins_mod):
+    f = builtins_mod.min_if
+    epyc_f = epyc_builtins_mod.min_if
 
     int_args = [randint(min_int // 3, max_int // 3) for _ in range(2)]
 
     assert epyc_f(*int_args) == f(*int_args)
 
 
-def test_min_in_min(language):
-    def f(x: "int", y: "int"):
-        if min(min(x + x, +y), min(x + y, y)) < (
-            x + y
-        ):  # pylint: disable=nested-min-max
-            return x + y
-        else:
-            return x - y
-
-    epyc_f = epyccel(f, language=language)
+def test_min_in_min(epyc_builtins_mod):
+    f = builtins_mod.min_in_min
+    epyc_f = epyc_builtins_mod.min_in_min
 
     int_args = [randint(min_int // 3, max_int // 3) for _ in range(2)]
 
     assert epyc_f(*int_args) == f(*int_args)
 
 
-def test_min_list(language):
-    def f(x: T, y: T, z: T):
-        return min([x, y, z])
-
-    epyc_f = epyccel(f, language=language)
+def test_min_list(epyc_builtins_mod):
+    f = builtins_mod.min_list
+    epyc_f = epyc_builtins_mod.min_list
 
     int_args = [randint(min_int, max_int) for _ in range(3)]
     float_args = [uniform(min_float / 2, max_float / 2) for _ in range(3)]
@@ -166,11 +138,9 @@ def test_min_list(language):
     assert np.isclose(epyc_f(*float_args), f(*float_args), rtol=RTOL, atol=ATOL)
 
 
-def test_min_tuple(language):
-    def f(x: T, y: T, z: T):
-        return min((x, y, z))
-
-    epyc_f = epyccel(f, language=language)
+def test_min_tuple(epyc_builtins_mod):
+    f = builtins_mod.min_tuple
+    epyc_f = epyc_builtins_mod.min_tuple
 
     int_args = [randint(min_int, max_int) for _ in range(3)]
     float_args = [uniform(min_float / 2, max_float / 2) for _ in range(3)]
@@ -179,12 +149,9 @@ def test_min_tuple(language):
     assert np.isclose(epyc_f(*float_args), f(*float_args), rtol=RTOL, atol=ATOL)
 
 
-def test_min_list_var(language):
-    def f(x: T, y: T, z: T):
-        w = [x, y, z]
-        return min(w)
-
-    epyc_f = epyccel(f, language=language)
+def test_min_list_var(epyc_builtins_mod):
+    f = builtins_mod.min_list_var
+    epyc_f = epyc_builtins_mod.min_list_var
 
     int_args = [randint(min_int, max_int) for _ in range(3)]
     float_args = [uniform(min_float / 2, max_float / 2) for _ in range(3)]
@@ -193,12 +160,9 @@ def test_min_list_var(language):
     assert np.isclose(epyc_f(*float_args), f(*float_args), rtol=RTOL, atol=ATOL)
 
 
-def test_min_tuple_var(language):
-    def f(x: T, y: T, z: T):
-        w = (x, y, z)
-        return min(w)
-
-    epyc_f = epyccel(f, language=language)
+def test_min_tuple_var(epyc_builtins_mod):
+    f = builtins_mod.min_tuple_var
+    epyc_f = epyc_builtins_mod.min_tuple_var
 
     int_args = [randint(min_int, max_int) for _ in range(3)]
     float_args = [uniform(min_float / 2, max_float / 2) for _ in range(3)]
@@ -207,11 +171,9 @@ def test_min_tuple_var(language):
     assert np.isclose(epyc_f(*float_args), f(*float_args), rtol=RTOL, atol=ATOL)
 
 
-def test_min_expr(language):
-    def f(x: T, y: T):
-        return min((x, y)) + 3, min(x, y) + 4
-
-    epyc_f = epyccel(f, language=language)
+def test_min_expr(epyc_builtins_mod):
+    f = builtins_mod.min_expr
+    epyc_f = epyc_builtins_mod.min_expr
 
     int_args = [randint(min_int, max_int) for _ in range(2)]
     float_args = [uniform(min_float / 2, max_float / 2) for _ in range(2)]
@@ -220,55 +182,45 @@ def test_min_expr(language):
     assert np.allclose(epyc_f(*float_args), f(*float_args), rtol=RTOL, atol=ATOL)
 
 
-def test_min_temp_var_first_arg(language):
-    def f(x: "int", y: "int"):
-        return min(x + 1, y)
-
-    epyc_f = epyccel(f, language=language)
+def test_min_temp_var_first_arg(epyc_builtins_mod):
+    f = builtins_mod.min_temp_var_first_arg
+    epyc_f = epyc_builtins_mod.min_temp_var_first_arg
 
     x, y = randint(min_int, max_int), randint(min_int, max_int)
 
     assert epyc_f(x, y) == f(x, y)
 
 
-def test_min_temp_var_second_arg(language):
-    def f(x: "int", y: "int"):
-        return min(x, y + 2)
-
-    epyc_f = epyccel(f, language=language)
+def test_min_temp_var_second_arg(epyc_builtins_mod):
+    f = builtins_mod.min_temp_var_second_arg
+    epyc_f = epyc_builtins_mod.min_temp_var_second_arg
 
     x, y = randint(min_int, max_int), randint(min_int, max_int)
 
     assert epyc_f(x, y) == f(x, y)
 
 
-def test_max_2_args_i(language):
-    def f(x: "int", y: "int"):
-        return max(x, y)
-
-    epyc_f = epyccel(f, language=language)
+def test_max_2_args_i(epyc_builtins_mod):
+    f = builtins_mod.max_2_args_i
+    epyc_f = epyc_builtins_mod.max_2_args_i
 
     int_args = [randint(min_int, max_int) for _ in range(2)]
 
     assert epyc_f(*int_args) == f(*int_args)
 
 
-def test_max_2_args_f(language):
-    def f(x: "float", y: "float"):
-        return max(x, y)
-
-    epyc_f = epyccel(f, language=language)
+def test_max_2_args_f(epyc_builtins_mod):
+    f = builtins_mod.max_2_args_f
+    epyc_f = epyc_builtins_mod.max_2_args_f
 
     float_args = [uniform(min_float / 2, max_float / 2) for _ in range(2)]
 
     assert np.isclose(epyc_f(*float_args), f(*float_args), rtol=RTOL, atol=ATOL)
 
 
-def test_max_3_args(language):
-    def f(x: T, y: T, z: T):
-        return max(x, y, z)
-
-    epyc_f = epyccel(f, language=language)
+def test_max_3_args(epyc_builtins_mod):
+    f = builtins_mod.max_3_args
+    epyc_f = epyc_builtins_mod.max_3_args
 
     int_args = [randint(min_int, max_int) for _ in range(3)]
     float_args = [uniform(min_float / 2, max_float / 2) for _ in range(3)]
@@ -277,11 +229,9 @@ def test_max_3_args(language):
     assert np.isclose(epyc_f(*float_args), f(*float_args), rtol=RTOL, atol=ATOL)
 
 
-def test_max_list(language):
-    def f(x: T, y: T, z: T):
-        return max([x, y, z])
-
-    epyc_f = epyccel(f, language=language)
+def test_max_list(epyc_builtins_mod):
+    f = builtins_mod.max_list
+    epyc_f = epyc_builtins_mod.max_list
 
     int_args = [randint(min_int, max_int) for _ in range(3)]
     float_args = [uniform(min_float / 2, max_float / 2) for _ in range(3)]
@@ -290,11 +240,9 @@ def test_max_list(language):
     assert np.isclose(epyc_f(*float_args), f(*float_args), rtol=RTOL, atol=ATOL)
 
 
-def test_max_tuple(language):
-    def f(x: T, y: T, z: T):
-        return max((x, y, z))
-
-    epyc_f = epyccel(f, language=language)
+def test_max_tuple(epyc_builtins_mod):
+    f = builtins_mod.max_tuple
+    epyc_f = epyc_builtins_mod.max_tuple
 
     int_args = [randint(min_int, max_int) for _ in range(3)]
     float_args = [uniform(min_float / 2, max_float / 2) for _ in range(3)]
@@ -303,12 +251,9 @@ def test_max_tuple(language):
     assert np.isclose(epyc_f(*float_args), f(*float_args), rtol=RTOL, atol=ATOL)
 
 
-def test_max_list_var(language):
-    def f(x: T, y: T, z: T):
-        w = [x, y, z]
-        return max(w)
-
-    epyc_f = epyccel(f, language=language)
+def test_max_list_var(epyc_builtins_mod):
+    f = builtins_mod.max_list_var
+    epyc_f = epyc_builtins_mod.max_list_var
 
     int_args = [randint(min_int, max_int) for _ in range(3)]
     float_args = [uniform(min_float / 2, max_float / 2) for _ in range(3)]
@@ -317,12 +262,9 @@ def test_max_list_var(language):
     assert np.isclose(epyc_f(*float_args), f(*float_args), rtol=RTOL, atol=ATOL)
 
 
-def test_max_tuple_var(language):
-    def f(x: T, y: T, z: T):
-        w = (x, y, z)
-        return max(w)
-
-    epyc_f = epyccel(f, language=language)
+def test_max_tuple_var(epyc_builtins_mod):
+    f = builtins_mod.max_tuple_var
+    epyc_f = epyc_builtins_mod.max_tuple_var
 
     int_args = [randint(min_int, max_int) for _ in range(3)]
     float_args = [uniform(min_float / 2, max_float / 2) for _ in range(3)]
@@ -331,11 +273,9 @@ def test_max_tuple_var(language):
     assert np.isclose(epyc_f(*float_args), f(*float_args), rtol=RTOL, atol=ATOL)
 
 
-def test_max_expr(language):
-    def f(x: T, y: T):
-        return max((x, y)) + 3, max(x, y) + 4
-
-    epyc_f = epyccel(f, language=language)
+def test_max_expr(epyc_builtins_mod):
+    f = builtins_mod.max_expr
+    epyc_f = epyc_builtins_mod.max_expr
 
     int_args = [randint(min_int, max_int) for _ in range(2)]
     float_args = [uniform(min_float / 2, max_float / 2) for _ in range(2)]
@@ -344,22 +284,18 @@ def test_max_expr(language):
     assert np.allclose(epyc_f(*float_args), f(*float_args), rtol=RTOL, atol=ATOL)
 
 
-def test_max_temp_var_first_arg(language):
-    def f(x: "int", y: "int"):
-        return max(x + 1, y)
-
-    epyc_f = epyccel(f, language=language)
+def test_max_temp_var_first_arg(epyc_builtins_mod):
+    f = builtins_mod.max_temp_var_first_arg
+    epyc_f = epyc_builtins_mod.max_temp_var_first_arg
 
     x, y = randint(min_int, max_int), randint(min_int, max_int)
 
     assert epyc_f(x, y) == f(x, y)
 
 
-def test_max_temp_var_second_arg(language):
-    def f(x: "int", y: "int"):
-        return max(x, y + 2)
-
-    epyc_f = epyccel(f, language=language)
+def test_max_temp_var_second_arg(epyc_builtins_mod):
+    f = builtins_mod.max_temp_var_second_arg
+    epyc_f = epyc_builtins_mod.max_temp_var_second_arg
 
     x, y = randint(min_int, max_int), randint(min_int, max_int)
 
@@ -378,7 +314,7 @@ def test_max_temp_var_second_arg(language):
     ),
 )
 def test_sum_matching_types(language):
-    def f(x: T2, y: T2):
+    def f(x: builtins_mod.T2, y: builtins_mod.T2):
         return sum([x, y])
 
     epyc_f = epyccel(f, language=language)
@@ -408,7 +344,7 @@ def test_sum_matching_types(language):
     ),
 )
 def test_sum_expr(language):
-    def f(x: T, y: T):
+    def f(x: builtins_mod.T, y: builtins_mod.T):
         return sum((x, y)) + 3
 
     epyc_f = epyccel(f, language=language)
@@ -420,72 +356,44 @@ def test_sum_expr(language):
     assert np.allclose(epyc_f(*float_args), f(*float_args), rtol=RTOL, atol=ATOL)
 
 
-def test_len_numpy(language):
-    def f():
-        from numpy import ones
-
-        a = ones((3, 4))
-        b = ones((4, 3, 5))
-        c = ones(4)
-        return len(a), len(b), len(c)
-
-    epyc_f = epyccel(f, language=language)
+def test_len_numpy(epyc_builtins_mod):
+    f = builtins_mod.len_numpy
+    epyc_f = epyc_builtins_mod.len_numpy
 
     assert epyc_f() == f()
 
 
-def test_len_tuple(language):
-    def f():
-        a = (3, 4)
-        b = (4, 3, 5)
-        c = b
-        return len(a), len(b), len(c), len((1, 2))
-
-    epyc_f = epyccel(f, language=language)
+def test_len_tuple(epyc_builtins_mod):
+    f = builtins_mod.len_tuple
+    epyc_f = epyc_builtins_mod.len_tuple
 
     assert epyc_f() == f()
 
 
-def test_len_inhomog_tuple(language):
-    def f():
-        a = (3, True)
-        b = (4j, False, 5)
-        c = b
-        return len(a), len(b), len(c), len((1.5, 2))
-
-    epyc_f = epyccel(f, language=language)
+def test_len_inhomog_tuple(epyc_builtins_mod):
+    f = builtins_mod.len_inhomog_tuple
+    epyc_f = epyc_builtins_mod.len_inhomog_tuple
 
     assert epyc_f() == f()
 
 
-def test_len_list_int(language):
-    def f():
-        a = [1, 2, 3]
-        return len(a)
-
-    epyc_f = epyccel(f, language=language)
+def test_len_list_int(epyc_builtins_mod):
+    f = builtins_mod.len_list_int
+    epyc_f = epyc_builtins_mod.len_list_int
 
     assert epyc_f() == f()
 
 
-def test_len_list_float(language):
-    def f():
-        a = [1.4, 2.6, 3.5]
-        b = len(a)
-        return b
-
-    epyc_f = epyccel(f, language=language)
+def test_len_list_float(epyc_builtins_mod):
+    f = builtins_mod.len_list_float
+    epyc_f = epyc_builtins_mod.len_list_float
 
     assert epyc_f() == f()
 
 
-def test_len_list_complex(language):
-    def f():
-        a = [1j, 2 + 1j, 3 + 1j]
-        b = len(a)
-        return b
-
-    epyc_f = epyccel(f, language=language)
+def test_len_list_complex(epyc_builtins_mod):
+    f = builtins_mod.len_list_complex
+    epyc_f = epyc_builtins_mod.len_list_complex
 
     assert epyc_f() == f()
 
@@ -533,23 +441,16 @@ def test_len_dict_int_float(stc_language):
     assert epyc_f() == f()
 
 
-def test_len_string(language):
-    def f():
-        a = "abcdefghij"
-        b = len(a)
-        return b
-
-    epyc_f = epyccel(f, language=language)
+def test_len_string(epyc_builtins_mod):
+    f = builtins_mod.len_string
+    epyc_f = epyc_builtins_mod.len_string
 
     assert epyc_f() == f()
 
 
-def test_len_literal_string(language):
-    def f():
-        b = len("abcd")
-        return b
-
-    epyc_f = epyccel(f, language=language)
+def test_len_literal_string(epyc_builtins_mod):
+    f = builtins_mod.len_literal_string
+    epyc_f = epyc_builtins_mod.len_literal_string
 
     assert epyc_f() == f()
 
@@ -565,11 +466,9 @@ def test_len_multi_layer(stc_language):
     assert epyc_f() == f()
 
 
-def test_round_int(language):
-    def round_int(x: float):
-        return round(x)
-
-    f = epyccel(round_int, language=language)
+def test_round_int(epyc_builtins_mod):
+    round_int = builtins_mod.round_int
+    f = epyc_builtins_mod.round_int
     x = randint(100) / 10
 
     f_output = f(x)
@@ -602,11 +501,9 @@ def test_round_int(language):
     assert isinstance(f_output, type(round_int_output))
 
 
-def test_negative_round_int(language):
-    def round_int(x: float):
-        return round(x)
-
-    f = epyccel(round_int, language=language)
+def test_negative_round_int(epyc_builtins_mod):
+    round_int = builtins_mod.round_int
+    f = epyc_builtins_mod.round_int
     x = -randint(100) / 10
 
     f_output = f(x)
@@ -639,11 +536,9 @@ def test_negative_round_int(language):
     assert isinstance(f_output, type(round_int_output))
 
 
-def test_round_ndigits(language):
-    def round_ndigits(x: float, i: int):
-        return round(x, i)
-
-    f = epyccel(round_ndigits, language=language)
+def test_round_ndigits(epyc_builtins_mod):
+    round_ndigits = builtins_mod.round_ndigits
+    f = epyc_builtins_mod.round_ndigits
     x = randint(100) / 10
 
     f_output = f(x, 1)
@@ -673,11 +568,9 @@ def test_round_ndigits(language):
     assert isinstance(f_output, type(round_ndigits_output))
 
 
-def test_round_ndigits_half(language):
-    def round_ndigits(x: float, i: int):
-        return round(x, i)
-
-    f = epyccel(round_ndigits, language=language)
+def test_round_ndigits_half(epyc_builtins_mod):
+    round_ndigits = builtins_mod.round_ndigits
+    f = epyc_builtins_mod.round_ndigits
     x = randint(100) / 10
 
     f_output = f(x, 1)
@@ -707,11 +600,9 @@ def test_round_ndigits_half(language):
     assert isinstance(f_output, type(round_ndigits_output))
 
 
-def test_round_ndigits_int(language):
-    def round_ndigits(x: int, i: int):
-        return round(x, i)
-
-    f = epyccel(round_ndigits, language=language)
+def test_round_ndigits_int(epyc_builtins_mod):
+    round_ndigits = builtins_mod.round_ndigits_int
+    f = epyc_builtins_mod.round_ndigits_int
     x = randint(100) // 10
 
     f_output = f(x, 1)
@@ -741,11 +632,9 @@ def test_round_ndigits_int(language):
     assert isinstance(f_output, type(round_ndigits_output))
 
 
-def test_round_ndigits_bool(language):
-    def round_ndigits():
-        return round(True), round(False), round(True, 1), round(True, -1)
-
-    f = epyccel(round_ndigits, language=language)
+def test_round_ndigits_bool(epyc_builtins_mod):
+    round_ndigits = builtins_mod.round_ndigits_bool
+    f = epyc_builtins_mod.round_ndigits_bool
 
     f_output = f()
     round_ndigits_output = round_ndigits()
@@ -753,16 +642,9 @@ def test_round_ndigits_bool(language):
     assert all(isinstance(o, type(r)) for o, r in zip(f_output, round_ndigits_output))
 
 
-def test_isinstance_native(language):
-    def isinstance_test(a: "bool | int | float | complex"):
-        return (
-            isinstance(a, bool),
-            isinstance(a, int),
-            isinstance(a, float),
-            isinstance(a, complex),
-        )
-
-    f = epyccel(isinstance_test, language=language)
+def test_isinstance_native(epyc_builtins_mod):
+    isinstance_test = builtins_mod.isinstance_native
+    f = epyc_builtins_mod.isinstance_native
     assert f(True) == isinstance_test(True)
     assert f(False) == isinstance_test(False)
     assert f(4) == isinstance_test(6)
@@ -815,35 +697,18 @@ def test_isinstance_containers(language):
         assert f(2, 5) == f_epyc(2, 5)
 
 
-def test_isinstance_numpy(language):
-    def isinstance_test(a: "int32 | int64 | int | float32"):
-        return (
-            isinstance(a, np.int32),
-            isinstance(a, np.int64),
-            isinstance(a, int),
-            isinstance(a, np.float32),
-        )
-
-    f = epyccel(isinstance_test, language=language)
+def test_isinstance_numpy(epyc_builtins_mod):
+    isinstance_test = builtins_mod.isinstance_numpy
+    f = epyc_builtins_mod.isinstance_numpy
     assert f(np.int32(4)) == isinstance_test(np.int32(4))
     assert f(np.int64(4)) == isinstance_test(np.int64(4))
     assert f(4) == isinstance_test(4)
     assert f(np.float32(4)) == isinstance_test(np.float32(4))
 
 
-def test_isinstance_tuple(language):
-    def isinstance_test(a: "bool | int | float | complex"):
-        """
-        Testing a case which should generate radically different functions.
-        """
-        return (
-            isinstance(a, (bool, int)),
-            isinstance(a, (bool, float)),
-            isinstance(a, (int, complex)),
-            isinstance(a, (tuple, list)),
-        )
-
-    f = epyccel(isinstance_test, language=language)
+def test_isinstance_tuple(epyc_builtins_mod):
+    isinstance_test = builtins_mod.isinstance_tuple
+    f = epyc_builtins_mod.isinstance_tuple
     assert f(True) == isinstance_test(True)
     assert f(False) == isinstance_test(False)
     assert f(4) == isinstance_test(6)

@@ -1,0 +1,49 @@
+# pylint: disable=missing-function-docstring, missing-module-docstring
+from typing import Final, TypeVar
+
+I = TypeVar("I", "int8", "int16", "int32", "int64")
+F = TypeVar("F", "float32", "float")
+T = TypeVar("T", "complex64", "complex128")
+
+
+def array_int_1d_scalar_add(x: "I[:]", a: I):
+    x_len = x.size
+    for i in range(x_len):
+        x[i] += a
+
+
+def array_float_1d_scalar_add(x: "F[:]", a: F):
+    x_len = x.size
+    for i in range(x_len):
+        x[i] += a
+
+
+def array_complex_1d_scalar_add(x: "T[:]", a: T):
+    x_len = x.size
+    for i in range(x_len):
+        x[i] += a
+
+
+def array_int_2d_scalar_add(x: "I[:,:]", a: I):
+    d1, d2 = x.shape
+    for i in range(d1):
+        for j in range(d2):
+            x[i, j] += a
+
+
+def array_float_2d_scalar_add(x: "F[:,:]", a: F):
+    d1, d2 = x.shape
+    for i in range(d1):
+        for j in range(d2):
+            x[i, j] += a
+
+
+def array_complex_2d_scalar_add(x: "T[:,:]", a: T):
+    d1, d2 = x.shape
+    for i in range(d1):
+        for j in range(d2):
+            x[i, j] += a
+
+
+def array_final(x: "Final[float[:]]"):
+    return x[0]

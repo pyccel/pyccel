@@ -1,16 +1,20 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 import numpy as np
+import pytest
+from modules import class_expressions
 from numpy.random import randint
 
-from pyccel import epyccel
+from epyccel_utilities import epyccel_module_with_fallback
 
 
-def test_complex_imag(language):
-    def f():
-        a = 1 + 2j
-        return a.imag
+@pytest.fixture(scope="module")
+def epyc_class_expressions_mod(language):
+    return epyccel_module_with_fallback(class_expressions, language)
 
-    epyc_f = epyccel(f, language=language)
+
+def test_complex_imag(epyc_class_expressions_mod):
+    f = class_expressions.complex_imag
+    epyc_f = epyc_class_expressions_mod.complex_imag
 
     r = f()
     epyc_r = epyc_f()
@@ -19,11 +23,9 @@ def test_complex_imag(language):
     assert isinstance(r, type(epyc_r))
 
 
-def test_complex_imag_expr(language):
-    def f(a: "complex", b: "complex"):
-        return (a + b).imag
-
-    epyc_f = epyccel(f, language=language)
+def test_complex_imag_expr(epyc_class_expressions_mod):
+    f = class_expressions.complex_imag_expr
+    epyc_f = epyc_class_expressions_mod.complex_imag_expr
 
     a = randint(20) + 1j * randint(20)
     b = randint(20) + 1j * randint(20)
@@ -35,12 +37,9 @@ def test_complex_imag_expr(language):
     assert isinstance(r, type(epyc_r))
 
 
-def test_float_imag(language):
-    def f():
-        a = 1.5
-        return a.imag
-
-    epyc_f = epyccel(f, language=language)
+def test_float_imag(epyc_class_expressions_mod):
+    f = class_expressions.float_imag
+    epyc_f = epyc_class_expressions_mod.float_imag
 
     r = f()
     epyc_r = epyc_f()
@@ -49,12 +48,9 @@ def test_float_imag(language):
     assert isinstance(r, type(epyc_r))
 
 
-def test_complex_real(language):
-    def f():
-        a = 1 + 2j
-        return a.real
-
-    epyc_f = epyccel(f, language=language)
+def test_complex_real(epyc_class_expressions_mod):
+    f = class_expressions.complex_real
+    epyc_f = epyc_class_expressions_mod.complex_real
 
     r = f()
     epyc_r = epyc_f()
@@ -63,11 +59,9 @@ def test_complex_real(language):
     assert isinstance(r, type(epyc_r))
 
 
-def test_complex_real_expr(language):
-    def f(a: "complex", b: "complex"):
-        return (a + b).real
-
-    epyc_f = epyccel(f, language=language)
+def test_complex_real_expr(epyc_class_expressions_mod):
+    f = class_expressions.complex_real_expr
+    epyc_f = epyc_class_expressions_mod.complex_real_expr
 
     a = randint(20) + 1j * randint(20)
     b = randint(20) + 1j * randint(20)
@@ -79,11 +73,9 @@ def test_complex_real_expr(language):
     assert isinstance(r, type(epyc_r))
 
 
-def test_complex_conjugate(language):
-    def f(a: "complex", b: "complex"):
-        return (a + b).conjugate()
-
-    epyc_f = epyccel(f, language=language)
+def test_complex_conjugate(epyc_class_expressions_mod):
+    f = class_expressions.complex_conjugate
+    epyc_f = epyc_class_expressions_mod.complex_conjugate
 
     a = randint(20) + 1j * randint(20)
     b = randint(20) + 1j * randint(20)
@@ -95,11 +87,9 @@ def test_complex_conjugate(language):
     assert isinstance(r, type(epyc_r))
 
 
-def test_complex64_conjugate(language):
-    def f(a: "complex64", b: "complex64"):
-        return (a + b).conj()
-
-    epyc_f = epyccel(f, language=language)
+def test_complex64_conjugate(epyc_class_expressions_mod):
+    f = class_expressions.complex64_conjugate
+    epyc_f = epyc_class_expressions_mod.complex64_conjugate
 
     a = np.complex64(randint(20) + 1j * randint(20))
     b = np.complex64(randint(20) + 1j * randint(20))
@@ -111,11 +101,9 @@ def test_complex64_conjugate(language):
     assert isinstance(r, type(epyc_r))
 
 
-def test_float_conjugate(language):
-    def f(a: "float", b: "float"):
-        return (a + b).conjugate()
-
-    epyc_f = epyccel(f, language=language)
+def test_float_conjugate(epyc_class_expressions_mod):
+    f = class_expressions.float_conjugate
+    epyc_f = epyc_class_expressions_mod.float_conjugate
 
     a = float(randint(20))
     b = float(randint(20))
@@ -127,11 +115,9 @@ def test_float_conjugate(language):
     assert isinstance(r, type(epyc_r))
 
 
-def test_float64_conjugate(language):
-    def f(a: "float64", b: "float64"):
-        return (a + b).conj()
-
-    epyc_f = epyccel(f, language=language)
+def test_float64_conjugate(epyc_class_expressions_mod):
+    f = class_expressions.float64_conjugate
+    epyc_f = epyc_class_expressions_mod.float64_conjugate
 
     a = np.float64(randint(20))
     b = np.float64(randint(20))
@@ -143,11 +129,9 @@ def test_float64_conjugate(language):
     assert isinstance(r, type(epyc_r))
 
 
-def test_int_conjugate(language):
-    def f(a: "int", b: "int"):
-        return (a + b).conjugate()
-
-    epyc_f = epyccel(f, language=language)
+def test_int_conjugate(epyc_class_expressions_mod):
+    f = class_expressions.int_conjugate
+    epyc_f = epyc_class_expressions_mod.int_conjugate
 
     a = randint(20)
     b = randint(20)
@@ -159,11 +143,9 @@ def test_int_conjugate(language):
     assert isinstance(r, type(epyc_r))
 
 
-def test_int32_conjugate(language):
-    def f(a: "int32", b: "int32"):
-        return (a + b).conj()
-
-    epyc_f = epyccel(f, language=language)
+def test_int32_conjugate(epyc_class_expressions_mod):
+    f = class_expressions.int32_conjugate
+    epyc_f = epyc_class_expressions_mod.int32_conjugate
 
     a = randint(20, dtype=np.int32)
     b = randint(20, dtype=np.int32)
@@ -175,11 +157,9 @@ def test_int32_conjugate(language):
     assert isinstance(r, type(epyc_r))
 
 
-def test_bool_conjugate(language):
-    def f(a: "bool", b: "bool"):
-        return (a or b).conjugate()
-
-    epyc_f = epyccel(f, language=language)
+def test_bool_conjugate(epyc_class_expressions_mod):
+    f = class_expressions.bool_conjugate
+    epyc_f = epyc_class_expressions_mod.bool_conjugate
 
     a = bool(randint(2))
     b = bool(randint(2))
@@ -191,13 +171,9 @@ def test_bool_conjugate(language):
     assert isinstance(r, type(epyc_r))
 
 
-def test_ndarray_var_from_expr(language):
-    def f(x: "int[:]", y: "int[:]"):
-        z = x + y
-        a = z.sum()
-        return a
-
-    epyc_f = epyccel(f, language=language)
+def test_ndarray_var_from_expr(epyc_class_expressions_mod):
+    f = class_expressions.ndarray_var_from_expr
+    epyc_f = epyc_class_expressions_mod.ndarray_var_from_expr
 
     a = np.ones(6, dtype=int)
     b = np.ones(6, dtype=int)
@@ -208,15 +184,11 @@ def test_ndarray_var_from_expr(language):
     assert r == epyc_r
 
 
-def test_ndarray_var_from_slice(language):
-    def f(x: "int[:]"):
-        z = x[1:]
-        a = z.sum()
-        return a
-
+def test_ndarray_var_from_slice(epyc_class_expressions_mod):
+    f = class_expressions.ndarray_var_from_slice
     a = np.ones(6, dtype=int)
 
-    epyc_f = epyccel(f, language=language)
+    epyc_f = epyc_class_expressions_mod.ndarray_var_from_slice
 
     r = f(a)
     epyc_r = epyc_f(a)
