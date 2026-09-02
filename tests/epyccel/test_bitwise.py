@@ -44,32 +44,32 @@ def test_right_shift_b_i(epyc_bitwise_mod, a, b):
 
 @pytest.mark.parametrize("a, b", [(True, 1), (True, 2)])
 def test_left_shift_b_i(epyc_bitwise_mod, a, b):
-    f1 = bitwise.right_shift_b_i
-    f2 = epyc_bitwise_mod.right_shift_b_i
-    r1 = f1(a, b)
-    r2 = f2(a, b)
-    assert r1 == r2
-    assert type(r1) is type(r2)
+    f1 = bitwise.left_shift_b_i
+    f2 = epyc_bitwise_mod.left_shift_b_i
+    l1 = f1(a, b)
+    l2 = f2(a, b)
+    assert l1 == l2
+    assert type(l1) is type(l2)
 
 
 @pytest.mark.parametrize("a, b", [(1, 1), (1, 2)])
 def test_left_shift_i_i(epyc_bitwise_mod, a, b):
-    f1 = bitwise.right_shift_i_i
-    f2 = epyc_bitwise_mod.right_shift_i_i
-    r1 = f1(a, b)
-    r2 = f2(a, b)
-    assert r1 == r2
-    assert type(r1) is type(r2)
+    f1 = bitwise.left_shift_i_i
+    f2 = epyc_bitwise_mod.left_shift_i_i
+    l1 = f1(a, b)
+    l2 = f2(a, b)
+    assert l1 == l2
+    assert type(l1) is type(l2)
 
 
 @pytest.mark.parametrize("a, b", [(True, False), (True, True)])
 def test_left_shift_b_b(epyc_bitwise_mod, a, b):
-    f1 = bitwise.right_shift_b_b
-    f2 = epyc_bitwise_mod.right_shift_b_b
-    r1 = f1(a, b)
-    r2 = f2(a, b)
-    assert r1 == r2
-    assert type(r1) is type(r2)
+    f1 = bitwise.left_shift_b_b
+    f2 = epyc_bitwise_mod.left_shift_b_b
+    l1 = f1(a, b)
+    l2 = f2(a, b)
+    assert l1 == l2
+    assert type(l1) is type(l2)
 
 
 def test_bit_xor_b_b(epyc_bitwise_mod):
