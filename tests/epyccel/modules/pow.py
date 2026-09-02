@@ -56,7 +56,7 @@ def complicated_abs(x: "complex"):
     return ((x * x.conjugate()).real ** 2) ** 0.5
 
 
-def fcomplex(x: complex, y: complex) -> complex:
+def fcomplex_sqrt(x: complex, y: complex) -> complex:
     z = (x + y) ** 0.5
     return z
 

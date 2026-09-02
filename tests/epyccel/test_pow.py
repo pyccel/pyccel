@@ -185,11 +185,11 @@ def test_complicated_abs(epyc_pow_mod):
     assert isinstance(f(y), type(norm(y)))
 
 
-def test_fcomplex_type_conversion(epyc_pow_mod):
-    fcomplex = pow_mod.fcomplex
-    f = epyc_pow_mod.fcomplex
+def test_fcomplex_sqrt(epyc_pow_mod):
+    fcomplex_sqrt = pow_mod.fcomplex_sqrt
+    epyc_fcomplex_sqrt = epyc_pow_mod.fcomplex_sqrt
     x = randint(40) + 1j * randint(40)
     y = randint(40) + 1j * randint(40)
 
-    assert isclose(f(x, y), fcomplex(x, y), rtol=RTOL, atol=ATOL)
-    assert isinstance(f(x, y), type(fcomplex(x, y)))
+    assert isclose(epyc_fcomplex_sqrt(x, y), fcomplex_sqrt(x, y), rtol=RTOL, atol=ATOL)
+    assert isinstance(epyc_fcomplex_sqrt(x, y), type(fcomplex_sqrt(x, y)))
