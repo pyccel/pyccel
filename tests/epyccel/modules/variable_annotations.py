@@ -84,30 +84,30 @@ def homogeneous_tuple_2_annotation_str():
 def homogeneous_set_annotation_int():
     a: set[int]
     a = {1, 2, 3, 4}
-    return len(a)
+    return a
 
 
 def homogeneous_set_without_annotation():
     a = {1, 2, 3, 4}
-    return len(a)
+    return a
 
 
 def homogeneous_set_annotation_float():
     a: "set[float]"
     a = {1.5, 2.5, 3.3, 4.3}
-    return len(a)
+    return a
 
 
 def homogeneous_set_annotation_bool():
     a: set[bool]
     a = {False, True, False, True}  # pylint: disable=duplicate-value
-    return len(a)
+    return a
 
 
 def homogeneous_set_annotation_complex():
     a: "set[complex]"
     a = {1 + 1j, 2 + 2j, 3 + 3j, 1 - 1j}
-    return len(a)
+    return a
 
 
 def empty_homogeneous_set_annotation_int():
