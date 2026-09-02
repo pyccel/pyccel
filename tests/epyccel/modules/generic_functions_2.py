@@ -162,6 +162,7 @@ def zeros_type(a: Z1):
     return x[0]
 
 
+# TODO: When #1339 is fixed uncomment these functions and update the related test_X functions in test_generic_functions.py
 # def scalar_or_array(a: IA):
 #    return a + 2
 #
