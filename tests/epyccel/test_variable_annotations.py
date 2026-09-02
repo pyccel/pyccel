@@ -198,17 +198,25 @@ def test_homogeneous_set_annotation_int(epyc_variable_annotations_mod):
     epyc_homogeneous_set_annotation = (
         epyc_variable_annotations_mod.homogeneous_set_annotation_int
     )
-    assert epyc_homogeneous_set_annotation() == homogeneous_set_annotation()
-    assert isinstance(
-        epyc_homogeneous_set_annotation(), type(homogeneous_set_annotation())
-    )
+
+    orig_output = homogeneous_set_annotation()
+    epyc_output = epyc_homogeneous_set_annotation()
+
+    assert orig_output == epyc_output
+    assert isinstance(epyc_output, type(orig_output))
+    assert isinstance(epyc_output.pop(), type(orig_output.pop()))
 
 
 def test_homogeneous_set_without_annotation(epyc_variable_annotations_mod):
     homogeneous_set = variable_annotations.homogeneous_set_without_annotation
     epyc_homogeneous_set = epyc_variable_annotations_mod.homogeneous_set_without_annotation
-    assert epyc_homogeneous_set() == homogeneous_set()
-    assert isinstance(epyc_homogeneous_set(), type(homogeneous_set()))
+
+    orig_output = homogeneous_set()
+    epyc_output = epyc_homogeneous_set()
+
+    assert orig_output == epyc_output
+    assert isinstance(epyc_output, type(orig_output))
+    assert isinstance(epyc_output.pop(), type(orig_output.pop()))
 
 
 def test_homogeneous_set_annotation_float(epyc_variable_annotations_mod):
@@ -216,10 +224,13 @@ def test_homogeneous_set_annotation_float(epyc_variable_annotations_mod):
     epyc_homogeneous_set_annotation = (
         epyc_variable_annotations_mod.homogeneous_set_annotation_float
     )
-    assert epyc_homogeneous_set_annotation() == homogeneous_set_annotation()
-    assert isinstance(
-        epyc_homogeneous_set_annotation(), type(homogeneous_set_annotation())
-    )
+
+    orig_output = homogeneous_set_annotation()
+    epyc_output = epyc_homogeneous_set_annotation()
+
+    assert orig_output == epyc_output
+    assert isinstance(epyc_output, type(orig_output))
+    assert isinstance(epyc_output.pop(), type(orig_output.pop()))
 
 
 def test_homogeneous_set_annotation_bool(epyc_variable_annotations_mod):
@@ -227,10 +238,13 @@ def test_homogeneous_set_annotation_bool(epyc_variable_annotations_mod):
     epyc_homogeneous_set_annotation = (
         epyc_variable_annotations_mod.homogeneous_set_annotation_bool
     )
-    assert epyc_homogeneous_set_annotation() == homogeneous_set_annotation()
-    assert isinstance(
-        epyc_homogeneous_set_annotation(), type(homogeneous_set_annotation())
-    )
+
+    orig_output = homogeneous_set_annotation()
+    epyc_output = epyc_homogeneous_set_annotation()
+
+    assert orig_output == epyc_output
+    assert isinstance(epyc_output, type(orig_output))
+    assert isinstance(epyc_output.pop(), type(orig_output.pop()))
 
 
 def test_homogeneous_set_annotation_complex(epyc_variable_annotations_mod):
@@ -238,10 +252,13 @@ def test_homogeneous_set_annotation_complex(epyc_variable_annotations_mod):
     epyc_homogeneous_set_annotation = (
         epyc_variable_annotations_mod.homogeneous_set_annotation_complex
     )
-    assert epyc_homogeneous_set_annotation() == homogeneous_set_annotation()
-    assert isinstance(
-        epyc_homogeneous_set_annotation(), type(homogeneous_set_annotation())
-    )
+
+    orig_output = homogeneous_set_annotation()
+    epyc_output = epyc_homogeneous_set_annotation()
+
+    assert orig_output == epyc_output
+    assert isinstance(epyc_output, type(orig_output))
+    assert isinstance(epyc_output.pop(), type(orig_output.pop()))
 
 
 def test_empty_homogeneous_set_annotation_int(epyc_variable_annotations_mod):
@@ -251,10 +268,12 @@ def test_empty_homogeneous_set_annotation_int(epyc_variable_annotations_mod):
     epyc_homogeneous_set_annotation = (
         epyc_variable_annotations_mod.empty_homogeneous_set_annotation_int
     )
-    assert epyc_homogeneous_set_annotation() == homogeneous_set_annotation()
-    assert isinstance(
-        epyc_homogeneous_set_annotation(), type(homogeneous_set_annotation())
-    )
+
+    orig_output = homogeneous_set_annotation()
+    epyc_output = epyc_homogeneous_set_annotation()
+
+    assert orig_output == epyc_output
+    assert isinstance(epyc_output, type(orig_output))
 
 
 def test_homogeneous_empty_list_annotation_int(epyc_variable_annotations_mod):
@@ -403,7 +422,16 @@ def test_homogeneous_list_annotation_embedded_complex(stc_language):
 def test_dict_int_float(epyc_variable_annotations_mod):
     dict_int_float = variable_annotations.dict_int_float
     epyc_dict_int_float = epyc_variable_annotations_mod.dict_int_float
-    assert epyc_dict_int_float() == dict_int_float()
+
+    orig_output = dict_int_float()
+    epyc_output = epyc_dict_int_float()
+
+    assert epyc_output == orig_output
+    assert isinstance(epyc_output, type(orig_output))
+    orig_k, orig_v = orig_output.popitem()
+    epyc_k, epyc_v = epyc_output.popitem()
+    assert isinstance(epyc_k, type(orig_k))
+    assert isinstance(epyc_v, type(orig_v))
 
 
 def test_dict_empty_init(epyc_variable_annotations_mod):
@@ -413,9 +441,19 @@ def test_dict_empty_init(epyc_variable_annotations_mod):
 
 
 def test_dict_complex_float(epyc_variable_annotations_mod):
-    dict_int_float = variable_annotations.dict_complex_float
-    epyc_dict_int_float = epyc_variable_annotations_mod.dict_complex_float
+    dict_complex_float = variable_annotations.dict_complex_float
+    epyc_dict_complex_float = epyc_variable_annotations_mod.dict_complex_float
     assert epyc_dict_int_float() == dict_int_float()
+
+    orig_output = dict_complex_float()
+    epyc_output = epyc_dict_complex_float()
+
+    assert epyc_output == orig_output
+    assert isinstance(epyc_output, type(orig_output))
+    orig_k, orig_v = orig_output.popitem()
+    epyc_k, epyc_v = epyc_output.popitem()
+    assert isinstance(epyc_k, type(orig_k))
+    assert isinstance(epyc_v, type(orig_v))
 
 
 def test_inhomogeneous_tuple_annotation_1(epyc_variable_annotations_mod):
