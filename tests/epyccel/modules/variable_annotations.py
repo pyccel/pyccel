@@ -168,19 +168,19 @@ def homogeneous_list_annotation_complex():
 def dict_int_float():
     a: dict[int, float]
     a = {1: 1.0, 2: 2.0}
-    return len(a)
+    return a
 
 
 def dict_empty_init():
     a: dict[int, float]
     a = {}
-    return len(a)
+    return a
 
 
 def dict_complex_float():
     a: dict[complex, float]
     a = {1j: 1.0, -1j: 2.0}
-    return len(a)
+    return a
 
 
 def inhomogeneous_tuple_annotation():
