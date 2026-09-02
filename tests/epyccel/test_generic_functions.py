@@ -483,9 +483,6 @@ def test_dup_header(epyc_mod2_mod):
     assert f1(0.0) == f2(0.0)
 
 
-@pytest.mark.skipif_by_language(
-    True, language="python", reason="Multiple dispatch required. See #885"
-)
 def test_zeros_types(epyc_mod2_mod):
     f1 = epyc_mod2_mod.zeros_type
     f2 = mod2.zeros_type
