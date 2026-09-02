@@ -284,7 +284,7 @@ def test_for_expression(epyc_loops_mod):
             "fortran",
             marks=[
                 pytest.mark.skip(
-                    reason="lists of lists not yet implemented in Fortran. Types defined in other modules"
+                    reason="lists of lists not yet implemented in Fortran (#2210). Types defined in other modules"
                 ),
                 pytest.mark.fortran,
             ],
