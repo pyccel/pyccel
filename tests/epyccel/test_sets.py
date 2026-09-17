@@ -306,27 +306,27 @@ def test_set_copy_from_arg2(epyc_sets_mod):
     assert python_result == pyccel_result
 
 
-def test_Pop_int(epyc_sets_mod):
-    Pop_int = sets.Pop_int
-    epyccel_remove = epyc_sets_mod.Pop_int
+def test_pop_int(epyc_sets_mod):
+    pop_int = sets.pop_int
+    epyccel_remove = epyc_sets_mod.pop_int
     pyccel_result = set(epyccel_remove())
-    python_result = set(Pop_int())
+    python_result = set(pop_int())
     assert python_result == pyccel_result
 
 
-def test_Pop_float(epyc_sets_mod):
-    Pop_float = sets.Pop_float
-    epyccel_remove = epyc_sets_mod.Pop_float
+def test_pop_float(epyc_sets_mod):
+    pop_float = sets.pop_float
+    epyccel_remove = epyc_sets_mod.pop_float
     pyccel_result = set(epyccel_remove())
-    python_result = set(Pop_float())
+    python_result = set(pop_float())
     assert python_result == pyccel_result
 
 
-def test_Pop_complex(epyc_sets_mod):
-    Pop_complex = sets.Pop_complex
-    epyccel_remove = epyc_sets_mod.Pop_complex
+def test_pop_complex(epyc_sets_mod):
+    pop_complex = sets.pop_complex
+    epyccel_remove = epyc_sets_mod.pop_complex
     pyccel_result = set(epyccel_remove())
-    python_result = set(Pop_complex())
+    python_result = set(pop_complex())
     assert python_result == pyccel_result
 
 

@@ -215,7 +215,7 @@ def copy_from_arg2(a: "set[float]"):
     return b
 
 
-def Pop_int():
+def pop_int():
     se = {2, 4, 9}
     el1 = se.pop()
     el2 = se.pop()
@@ -223,7 +223,7 @@ def Pop_int():
     return el1, el2, el3
 
 
-def Pop_float():
+def pop_float():
     se = {2.3, 4.1, 9.5}
     el1 = se.pop()
     el2 = se.pop()
@@ -231,7 +231,7 @@ def Pop_float():
     return el1, el2, el3
 
 
-def Pop_complex():
+def pop_complex():
     se = {4j, 1j, 7j}
     el1 = se.pop()
     el2 = se.pop()
