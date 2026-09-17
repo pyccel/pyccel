@@ -308,24 +308,24 @@ def test_set_copy_from_arg2(epyc_sets_mod):
 
 def test_pop_int(epyc_sets_mod):
     pop_int = sets.pop_int
-    epyccel_remove = epyc_sets_mod.pop_int
-    pyccel_result = set(epyccel_remove())
+    epyccel_pop = epyc_sets_mod.pop_int
+    pyccel_result = set(epyccel_pop())
     python_result = set(pop_int())
     assert python_result == pyccel_result
 
 
 def test_pop_float(epyc_sets_mod):
     pop_float = sets.pop_float
-    epyccel_remove = epyc_sets_mod.pop_float
-    pyccel_result = set(epyccel_remove())
+    epyccel_pop = epyc_sets_mod.pop_float
+    pyccel_result = set(epyccel_pop())
     python_result = set(pop_float())
     assert python_result == pyccel_result
 
 
 def test_pop_complex(epyc_sets_mod):
     pop_complex = sets.pop_complex
-    epyccel_remove = epyc_sets_mod.pop_complex
-    pyccel_result = set(epyccel_remove())
+    epyccel_pop = epyc_sets_mod.pop_complex
+    pyccel_result = set(epyccel_pop())
     python_result = set(pop_complex())
     assert python_result == pyccel_result
 
