@@ -1,56 +1,47 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring, missing-class-docstring
 
 import pytest
+from modules import imports
 from numpy import ones
 
 from pyccel import epyccel
 from pyccel.decorators import inline
 
+from epyccel_utilities import epyccel_module_with_fallback
+
+
+@pytest.fixture(scope="module")
+def epyc_imports_mod(language):
+    return epyccel_module_with_fallback(imports, language)
+
+
 # ==============================================================================
 
 
-def test_import(language):
-    def f1(x: "int[:]"):
-        import numpy
-
-        s = numpy.shape(x)[0]
-        return s
-
-    f = epyccel(f1, language=language)
+def test_import(epyc_imports_mod):
+    f1 = imports.f1
+    f = epyc_imports_mod.f1
     x = ones(10, dtype=int)
     assert f(x) == f1(x)
 
 
-def test_import_from(language):
-    def f2(x: "int[:]"):
-        from numpy import shape
-
-        s = shape(x)[0]
-        return s
-
-    f = epyccel(f2, language=language)
+def test_import_from(epyc_imports_mod):
+    f2 = imports.import_from
+    f = epyc_imports_mod.import_from
     x = ones(10, dtype=int)
     assert f(x) == f2(x)
 
 
-def test_import_as(language):
-    def f3(x: "int[:]"):
-        import numpy as np
-
-        s = np.shape(x)[0]
-        return s
-
-    f = epyccel(f3, language=language)
+def test_import_as(epyc_imports_mod):
+    f3 = imports.import_as
+    f = epyc_imports_mod.import_as
     x = ones(10, dtype=int)
     assert f(x) == f3(x)
 
 
-def test_import_method(language):
-    def f5(x: "int[:]"):
-        s = x.shape[0]
-        return s
-
-    f = epyccel(f5, language=language)
+def test_import_method(epyc_imports_mod):
+    f5 = imports.import_method
+    f = epyc_imports_mod.import_method
     x = ones(10, dtype=int)
     assert f(x) == f5(x)
 
