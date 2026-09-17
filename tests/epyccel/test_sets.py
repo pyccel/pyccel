@@ -237,28 +237,28 @@ def test_update_tuple_as_arg(epyc_sets_mod):
 
 
 def test_set_with_list(epyc_sets_mod):
-    set_With_list = sets.set_With_list
-    epyc_set_With_list = epyc_sets_mod.set_With_list
-    pyccel_result = epyc_set_With_list()
-    python_result = set_With_list()
+    set_from_list = sets.set_from_list
+    epyc_set_from_list = epyc_sets_mod.set_from_list
+    pyccel_result = epyc_set_from_list()
+    python_result = set_from_list()
     assert isinstance(python_result, type(pyccel_result))
     assert python_result == pyccel_result
 
 
 def test_set_with_tuple(epyc_sets_mod):
-    set_With_tuple = sets.set_With_tuple
-    epyc_set_With_tuple = epyc_sets_mod.set_With_tuple
-    pyccel_result = epyc_set_With_tuple()
-    python_result = set_With_tuple()
+    set_from_tuple = sets.set_from_tuple
+    epyc_set_from_tuple = epyc_sets_mod.set_from_tuple
+    pyccel_result = epyc_set_from_tuple()
+    python_result = set_from_tuple()
     assert isinstance(python_result, type(pyccel_result))
     assert python_result == pyccel_result
 
 
 def test_set_with_set(epyc_sets_mod):
-    set_With_set = sets.set_With_set
-    epyc_set_With_set = epyc_sets_mod.set_With_set
-    pyccel_result = epyc_set_With_set()
-    python_result = set_With_set()
+    set_from_set = sets.set_from_set
+    epyc_set_from_set = epyc_sets_mod.set_from_set
+    pyccel_result = epyc_set_from_set()
+    python_result = set_from_set()
     assert isinstance(python_result, type(pyccel_result))
     assert python_result == pyccel_result
 

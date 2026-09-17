@@ -182,19 +182,19 @@ def update_tuple_as_arg():
     return len(a), a.pop(), a.pop(), a.pop(), a.pop(), a.pop(), a.pop()
 
 
-def set_With_list():
+def set_from_list():
     a = [1.6, 6.3, 7.2]
     b = set(a)
     return b
 
 
-def set_With_tuple():
+def set_from_tuple():
     a = (1j, 6j, 7j)
     b = set(a)
     return b
 
 
-def set_With_set():
+def set_from_set():
     a = {True, False, True}  # pylint: disable=duplicate-value
     b = set(a)
     return b
