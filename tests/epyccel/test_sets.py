@@ -140,27 +140,27 @@ def test_remove_float(epyc_sets_mod):
     assert python_result == pyccel_result
 
 
-def test_Discard_int(epyc_sets_mod):
-    Discard_int = sets.Discard_int
-    epyccel_remove = epyc_sets_mod.Discard_int
+def test_discard_int(epyc_sets_mod):
+    discard_int = sets.discard_int
+    epyccel_remove = epyc_sets_mod.discard_int
     pyccel_result = epyccel_remove()
-    python_result = Discard_int()
+    python_result = discard_int()
     assert python_result == pyccel_result
 
 
-def test_Discard_complex(epyc_sets_mod):
-    Discard_complex = sets.Discard_complex
-    epyccel_remove = epyc_sets_mod.Discard_complex
+def test_discard_complex(epyc_sets_mod):
+    discard_complex = sets.discard_complex
+    epyccel_remove = epyc_sets_mod.discard_complex
     pyccel_result = epyccel_remove()
-    python_result = Discard_complex()
+    python_result = discard_complex()
     assert python_result == pyccel_result
 
 
-def test_Discard_wrong_arg(epyc_sets_mod):
-    Discard_wrong_arg = sets.Discard_wrong_arg
-    epyccel_remove = epyc_sets_mod.Discard_wrong_arg
+def test_discard_wrong_arg(epyc_sets_mod):
+    discard_wrong_arg = sets.discard_wrong_arg
+    epyccel_remove = epyc_sets_mod.discard_wrong_arg
     pyccel_result = epyccel_remove()
-    python_result = Discard_wrong_arg()
+    python_result = discard_wrong_arg()
     assert python_result == pyccel_result
 
 

@@ -77,19 +77,19 @@ def remove_float():
     return se
 
 
-def Discard_int():
+def discard_int():
     se = {2.7, 4.3, 9.2}
     se.discard(4.3)
     return se
 
 
-def Discard_complex():
+def discard_complex():
     se = {2j, 5j, 3j, 7j}
     se.discard(5j)
     return se
 
 
-def Discard_wrong_arg():
+def discard_wrong_arg():
     se = {4.7, 1.3, 8.2}
     se.discard(8.6)
     return se
