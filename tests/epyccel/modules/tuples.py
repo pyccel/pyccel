@@ -53,9 +53,7 @@ def inhomogeneous_tuple_3():
 
 
 def inhomogeneous_tuple_2_levels_1():
-    # TODO [EB 15.06.21] Put back original test when strings are supported in C
-    # ai = ((1,2), (4,False), (3.0, 'boo'))
-    ai = ((1, 2), (4, False), (3.0, True))
+    ai = ((1,2), (4,False), (3.0, 'boo'))
     return ai[0][0], ai[0][1], ai[1][0], ai[1][1], ai[2][0]
 
 
