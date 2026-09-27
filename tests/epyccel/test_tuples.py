@@ -151,13 +151,7 @@ def test_tuples_with_2d_args(test_func, epyc_tuples_mod):
     [
         pytest.param(
             "c",
-            marks=[
-                pytest.mark.c,
-                pytest.mark.skip(
-                    reason="Can't save a list of strings (#459)",
-                ),
-            ],
-        ),
+            marks=pytest.mark.c),
         pytest.param(
             "fortran",
             marks=[
