@@ -96,7 +96,7 @@ def test_numpy_scalar_promotion(epyc_numpy_types_mod):
     fl32 = np.float32(uniform(min_float32 / 2, max_float32 / 2))
     fl64 = np.float64(uniform(min_float64 / 2, max_float64 / 2))
     complex64 = np.complex64(uniform(min_float32 / 2, max_float32 / 2))
-    complex128 = np.complex64(uniform(min_float32 / 2, max_float32 / 2))
+    complex128 = np.complex128(uniform(min_float64 / 2, max_float64 / 2))
 
     epyccel_func = epyc_numpy_types_mod.add_numpy_to_numpy_type
 
