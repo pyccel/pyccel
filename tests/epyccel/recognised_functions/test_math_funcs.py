@@ -6,7 +6,7 @@ from math import inf, modf, nan
 import pytest
 from modules import math_funcs
 from numpy import isclose
-from numpy.random import rand, randint, uniform
+from numpy.random import randint, uniform
 
 from pyccel import epyccel
 
@@ -26,15 +26,15 @@ min_float = sys.float_info.min  # Minimum positive float
 def test_fabs_call(epyc_math_funcs_mod):
     fabs_call = math_funcs.fabs_call
     f1 = epyc_math_funcs_mod.fabs_call
-    x = rand()
+    x = uniform()
     assert isclose(f1(x), fabs_call(x), rtol=RTOL, atol=ATOL)
 
 
 def test_fabs_phrase(epyc_math_funcs_mod):
     fabs_phrase = math_funcs.fabs_phrase
     f2 = epyc_math_funcs_mod.fabs_phrase
-    x = rand()
-    y = rand()
+    x = uniform()
+    y = uniform()
     assert isclose(f2(x, y), fabs_phrase(x, y), rtol=RTOL, atol=ATOL)
 
 
@@ -51,29 +51,29 @@ def test_fabs_return_type(epyc_math_funcs_mod):
 def test_sqrt_call(epyc_math_funcs_mod):
     sqrt_call = math_funcs.sqrt_call
     f1 = epyc_math_funcs_mod.sqrt_call
-    x = rand()
+    x = uniform()
     assert isclose(f1(x), sqrt_call(x), rtol=RTOL, atol=ATOL)
 
 
 def test_sqrt_module_call(epyc_math_funcs_mod):
     sqrt_call = math_funcs.sqrt_module_call
     f1 = epyc_math_funcs_mod.sqrt_module_call
-    x = rand()
+    x = uniform()
     assert isclose(f1(x), sqrt_call(x), rtol=RTOL, atol=ATOL)
 
 
 def test_sqrt_phrase(epyc_math_funcs_mod):
     sqrt_phrase = math_funcs.sqrt_phrase
     f2 = epyc_math_funcs_mod.sqrt_phrase
-    x = rand()
-    y = rand()
+    x = uniform()
+    y = uniform()
     assert isclose(f2(x, y), sqrt_phrase(x, y), rtol=RTOL, atol=ATOL)
 
 
 def test_sqrt_return_type(epyc_math_funcs_mod):
     sqrt_return_type_real = math_funcs.sqrt_return_type_real
     f1 = epyc_math_funcs_mod.sqrt_return_type_real
-    x = rand()
+    x = uniform()
     assert isclose(f1(x), sqrt_return_type_real(x), rtol=RTOL, atol=ATOL)
     assert type(f1(x)) == type(
         sqrt_return_type_real(x)
@@ -83,182 +83,182 @@ def test_sqrt_return_type(epyc_math_funcs_mod):
 def test_sin_call(epyc_math_funcs_mod):
     sin_call = math_funcs.sin_call
     f1 = epyc_math_funcs_mod.sin_call
-    x = rand()
+    x = uniform()
     assert isclose(f1(x), sin_call(x), rtol=RTOL, atol=ATOL)
 
 
 def test_sin_phrase(epyc_math_funcs_mod):
     sin_phrase = math_funcs.sin_phrase
     f2 = epyc_math_funcs_mod.sin_phrase
-    x = rand()
-    y = rand()
+    x = uniform()
+    y = uniform()
     assert isclose(f2(x, y), sin_phrase(x, y), rtol=RTOL, atol=ATOL)
 
 
 def test_cos_call(epyc_math_funcs_mod):
     cos_call = math_funcs.cos_call
     f1 = epyc_math_funcs_mod.cos_call
-    x = rand()
+    x = uniform()
     assert isclose(f1(x), cos_call(x), rtol=RTOL, atol=ATOL)
 
 
 def test_cos_phrase(epyc_math_funcs_mod):
     cos_phrase = math_funcs.cos_phrase
     f2 = epyc_math_funcs_mod.cos_phrase
-    x = rand()
-    y = rand()
+    x = uniform()
+    y = uniform()
     assert isclose(f2(x, y), cos_phrase(x, y), rtol=RTOL, atol=ATOL)
 
 
 def test_tan_call(epyc_math_funcs_mod):
     tan_call = math_funcs.tan_call
     f1 = epyc_math_funcs_mod.tan_call
-    x = rand()
+    x = uniform()
     assert isclose(f1(x), tan_call(x), rtol=RTOL, atol=ATOL)
 
 
 def test_tan_phrase(epyc_math_funcs_mod):
     tan_phrase = math_funcs.tan_phrase
     f2 = epyc_math_funcs_mod.tan_phrase
-    x = rand()
-    y = rand()
+    x = uniform()
+    y = uniform()
     assert isclose(f2(x, y), tan_phrase(x, y), rtol=RTOL, atol=ATOL)
 
 
 def test_exp_call(epyc_math_funcs_mod):
     exp_call = math_funcs.exp_call
     f1 = epyc_math_funcs_mod.exp_call
-    x = rand()
+    x = uniform()
     assert isclose(f1(x), exp_call(x), rtol=RTOL, atol=ATOL)
 
 
 def test_exp_phrase(epyc_math_funcs_mod):
     exp_phrase = math_funcs.exp_phrase
     f2 = epyc_math_funcs_mod.exp_phrase
-    x = rand()
-    y = rand()
+    x = uniform()
+    y = uniform()
     assert isclose(f2(x, y), exp_phrase(x, y), rtol=RTOL, atol=ATOL)
 
 
 def test_log_call(epyc_math_funcs_mod):
     log_call = math_funcs.log_call
     f1 = epyc_math_funcs_mod.log_call
-    x = rand()
+    x = uniform()
     assert isclose(f1(x), log_call(x), rtol=RTOL, atol=ATOL)
 
 
 def test_log_phrase(epyc_math_funcs_mod):
     log_phrase = math_funcs.log_phrase
     f2 = epyc_math_funcs_mod.log_phrase
-    x = rand()
-    y = rand()
+    x = uniform()
+    y = uniform()
     assert isclose(f2(x, y), log_phrase(x, y), rtol=RTOL, atol=ATOL)
 
 
 def test_asin_call(epyc_math_funcs_mod):
     asin_call = math_funcs.asin_call
     f1 = epyc_math_funcs_mod.asin_call
-    x = rand()
+    x = uniform()
     assert isclose(f1(x), asin_call(x), rtol=RTOL, atol=ATOL)
 
 
 def test_asin_phrase(epyc_math_funcs_mod):
     asin_phrase = math_funcs.asin_phrase
     f2 = epyc_math_funcs_mod.asin_phrase
-    x = rand()
-    y = rand()
+    x = uniform()
+    y = uniform()
     assert isclose(f2(x, y), asin_phrase(x, y), rtol=RTOL, atol=ATOL)
 
 
 def test_acos_call(epyc_math_funcs_mod):
     acos_call = math_funcs.acos_call
     f1 = epyc_math_funcs_mod.acos_call
-    x = rand()
+    x = uniform()
     assert isclose(f1(x), acos_call(x), rtol=RTOL, atol=ATOL)
 
 
 def test_acos_phrase(epyc_math_funcs_mod):
     acos_phrase = math_funcs.acos_phrase
     f2 = epyc_math_funcs_mod.acos_phrase
-    x = rand()
-    y = rand()
+    x = uniform()
+    y = uniform()
     assert isclose(f2(x, y), acos_phrase(x, y), rtol=RTOL, atol=ATOL)
 
 
 def test_atan_call(epyc_math_funcs_mod):
     atan_call = math_funcs.atan_call
     f1 = epyc_math_funcs_mod.atan_call
-    x = rand()
+    x = uniform()
     assert isclose(f1(x), atan_call(x), rtol=RTOL, atol=ATOL)
 
 
 def test_atan_phrase(epyc_math_funcs_mod):
     atan_phrase = math_funcs.atan_phrase
     f2 = epyc_math_funcs_mod.atan_phrase
-    x = rand()
-    y = rand()
+    x = uniform()
+    y = uniform()
     assert isclose(f2(x, y), atan_phrase(x, y), rtol=RTOL, atol=ATOL)
 
 
 def test_sinh_call(epyc_math_funcs_mod):
     sinh_call = math_funcs.sinh_call
     f1 = epyc_math_funcs_mod.sinh_call
-    x = rand()
+    x = uniform()
     assert isclose(f1(x), sinh_call(x), rtol=RTOL, atol=ATOL)
 
 
 def test_sinh_phrase(epyc_math_funcs_mod):
     sinh_phrase = math_funcs.sinh_phrase
     f2 = epyc_math_funcs_mod.sinh_phrase
-    x = rand()
-    y = rand()
+    x = uniform()
+    y = uniform()
     assert isclose(f2(x, y), sinh_phrase(x, y), rtol=RTOL, atol=ATOL)
 
 
 def test_cosh_call(epyc_math_funcs_mod):
     cosh_call = math_funcs.cosh_call
     f1 = epyc_math_funcs_mod.cosh_call
-    x = rand()
+    x = uniform()
     assert isclose(f1(x), cosh_call(x), rtol=RTOL, atol=ATOL)
 
 
 def test_cosh_phrase(epyc_math_funcs_mod):
     cosh_phrase = math_funcs.cosh_phrase
     f2 = epyc_math_funcs_mod.cosh_phrase
-    x = rand()
-    y = rand()
+    x = uniform()
+    y = uniform()
     assert isclose(f2(x, y), cosh_phrase(x, y), rtol=RTOL, atol=ATOL)
 
 
 def test_tanh_call(epyc_math_funcs_mod):
     tanh_call = math_funcs.tanh_call
     f1 = epyc_math_funcs_mod.tanh_call
-    x = rand()
+    x = uniform()
     assert isclose(f1(x), tanh_call(x), rtol=RTOL, atol=ATOL)
 
 
 def test_tanh_phrase(epyc_math_funcs_mod):
     tanh_phrase = math_funcs.tanh_phrase
     f2 = epyc_math_funcs_mod.tanh_phrase
-    x = rand()
-    y = rand()
+    x = uniform()
+    y = uniform()
     assert isclose(f2(x, y), tanh_phrase(x, y), rtol=RTOL, atol=ATOL)
 
 
 def test_atan2_call(epyc_math_funcs_mod):
     atan2_call = math_funcs.atan2_call
     f1 = epyc_math_funcs_mod.atan2_call
-    x = rand()
-    y = rand()
+    x = uniform()
+    y = uniform()
     assert isclose(f1(x, y), atan2_call(x, y), rtol=RTOL, atol=ATOL)
 
 
 def test_atan2_phrase(epyc_math_funcs_mod):
     atan2_phrase = math_funcs.atan2_phrase
     f2 = epyc_math_funcs_mod.atan2_phrase
-    x = rand()
-    y = rand()
-    z = rand()
+    x = uniform()
+    y = uniform()
+    z = uniform()
     assert isclose(f2(x, y, z), atan2_phrase(x, y, z), rtol=RTOL, atol=ATOL)
 
 
@@ -271,7 +271,7 @@ def test_floor_call(language):
 
     flags = "-Werror -Wconversion"
     f1 = epyccel(floor_call, language=language, flags=flags)
-    x = rand()
+    x = uniform()
     assert isclose(f1(x), floor_call(x), rtol=RTOL, atol=ATOL)
     assert isclose(f1(-x), floor_call(-x), rtol=RTOL, atol=ATOL)
 
@@ -285,8 +285,8 @@ def test_floor_phrase(language):
 
     flags = "-Werror -Wconversion"
     f2 = epyccel(floor_phrase, language=language, flags=flags)
-    x = rand()
-    y = rand()
+    x = uniform()
+    y = uniform()
     assert isclose(f2(x, y), floor_phrase(x, y), rtol=RTOL, atol=ATOL)
     assert isclose(f2(-x, y), floor_phrase(-x, y), rtol=RTOL, atol=ATOL)
     assert isclose(f2(x, -y), floor_phrase(x, -y), rtol=RTOL, atol=ATOL)
@@ -337,7 +337,7 @@ def test_ceil_call_r(language):
     flags = "-Werror -Wconversion"
     f1 = epyccel(ceil_call, language=language, flags=flags)
 
-    x = rand()
+    x = uniform()
     assert ceil_call(x) == f1(x)
     assert ceil_call(-x) == f1(-x)
 
@@ -370,8 +370,8 @@ def test_ceil_phrase(language):
     flags = "-Werror -Wconversion"
     f2 = epyccel(ceil_phrase, language=language, flags=flags)
 
-    x = rand()
-    y = rand()
+    x = uniform()
+    y = uniform()
     assert isclose(ceil_phrase(x, y), f2(x, y), rtol=RTOL, atol=ATOL)
     assert isclose(ceil_phrase(-x, y), f2(-x, y), rtol=RTOL, atol=ATOL)
     assert isclose(ceil_phrase(x, -y), f2(x, -y), rtol=RTOL, atol=ATOL)
@@ -384,8 +384,8 @@ def test_ceil_phrase(language):
 def test_copysign_call(epyc_math_funcs_mod):
     copysign_call = math_funcs.copysign_call
     f1 = epyc_math_funcs_mod.copysign_call
-    x = rand()
-    y = rand()
+    x = uniform()
+    y = uniform()
     # Same sign
     assert isclose(copysign_call(x, y), f1(x, y), rtol=RTOL, atol=ATOL)
     assert isclose(copysign_call(-x, -y), f1(-x, -y), rtol=RTOL, atol=ATOL)
@@ -415,8 +415,8 @@ def test_copysign_return_type_1(epyc_math_funcs_mod):  # copysign
 
     copysign_return_type = math_funcs.copysign_return_type
     f1 = epyc_math_funcs_mod.copysign_return_type
-    x = rand()  # real
-    y = rand()  # real
+    x = uniform()  # real
+    y = uniform()  # real
 
     # Same sign
     assert isinstance(f1(x, y), type(copysign_return_type(x, y)))
@@ -450,7 +450,7 @@ def test_copysign_return_type_3(epyc_math_funcs_mod):  # copysign
     f1 = epyc_math_funcs_mod.copysign_return_type_3
     high = 10000000
     x = randint(high)  # int
-    y = rand()  # real
+    y = uniform()  # real
 
     # Same sign
     assert isinstance(f1(x, y), type(copysign_return_type(x, y)))
@@ -466,7 +466,7 @@ def test_copysign_return_type_4(epyc_math_funcs_mod):  # copysign
     copysign_return_type = math_funcs.copysign_return_type_4
     f1 = epyc_math_funcs_mod.copysign_return_type_4
     high = 10000000
-    x = rand()  # real
+    x = uniform()  # real
     y = randint(high)  # int
 
     # Same sign
@@ -488,7 +488,7 @@ def test_copysign_return_type_4(epyc_math_funcs_mod):  # copysign
 def test_isfinite_call(epyc_math_funcs_mod):  # isfinite
     isfinite_call = math_funcs.isfinite_call
     f1 = epyc_math_funcs_mod.isfinite_call
-    x = rand()
+    x = uniform()
 
     assert isfinite_call(x) == f1(x)
 
@@ -507,7 +507,7 @@ def test_isfinite_call(epyc_math_funcs_mod):  # isfinite
 def test_isinf_call(epyc_math_funcs_mod):  # isinf
     isinf_call = math_funcs.isinf_call
     f1 = epyc_math_funcs_mod.isinf_call
-    x = rand()
+    x = uniform()
 
     assert isinf_call(x) == f1(x)
 
@@ -525,7 +525,7 @@ def test_isinf_call(epyc_math_funcs_mod):  # isinf
 def test_isnan_call(epyc_math_funcs_mod):  # isnan
     isnan_call = math_funcs.isnan_call
     f1 = epyc_math_funcs_mod.isnan_call
-    x = rand()
+    x = uniform()
 
     assert isnan_call(x) == f1(x)
 
@@ -545,7 +545,7 @@ def test_ldexp_call(epyc_math_funcs_mod):  # ldexp
     ldexp_call = math_funcs.ldexp_call
     f1 = epyc_math_funcs_mod.ldexp_call
     high = 100
-    x = rand()
+    x = uniform()
     exp = randint(high)
 
     assert isclose(ldexp_call(x, exp), f1(x, exp), rtol=RTOL, atol=ATOL)
@@ -564,7 +564,7 @@ def test_ldexp_return_type(epyc_math_funcs_mod):  # ldexp
     ldexp_type = math_funcs.ldexp_type
     f1 = epyc_math_funcs_mod.ldexp_type
     high = 100
-    x = rand()
+    x = uniform()
     exp = randint(high)
 
     assert isinstance(ldexp_type(x, exp), type(f1(x, exp)))
@@ -585,8 +585,8 @@ def test_ldexp_return_type(epyc_math_funcs_mod):  # ldexp
 def test_remainder_call(epyc_math_funcs_mod):  # remainder
     remainder_call = math_funcs.remainder_call
     f1 = epyc_math_funcs_mod.remainder_call
-    x = rand()
-    y = rand() + 1
+    x = uniform()
+    y = uniform() + 1
     # Same sign
     assert isclose(remainder_call(x, y), f1(x, y), rtol=RTOL, atol=ATOL)
     assert isclose(remainder_call(-x, -y), f1(-x, -y), rtol=RTOL, atol=ATOL)
@@ -602,8 +602,8 @@ def test_remainder_call(epyc_math_funcs_mod):  # remainder
 def test_remainder_return_type(epyc_math_funcs_mod):  # remainder
     remainder_type = math_funcs.remainder_type
     f1 = epyc_math_funcs_mod.remainder_type
-    x = rand()
-    y = rand()
+    x = uniform()
+    y = uniform()
 
     # Same sign
     assert isinstance(remainder_type(x, y), type(f1(x, y)))
@@ -656,7 +656,7 @@ def test_trunc_return_type(epyc_math_funcs_mod):  # trunc
 def test_expm1_call(epyc_math_funcs_mod):  # expm1
     expm1_call = math_funcs.expm1_call
     f1 = epyc_math_funcs_mod.expm1_call
-    x = rand()
+    x = uniform()
     assert isclose(f1(x), expm1_call(x), rtol=RTOL, atol=ATOL)
 
 
@@ -677,8 +677,8 @@ def test_expm1_call_special_case(epyc_math_funcs_mod):  # expm1
 def test_expm1_phrase(epyc_math_funcs_mod):  # expm1
     expm1_phrase = math_funcs.expm1_phrase
     f2 = epyc_math_funcs_mod.expm1_phrase
-    x = rand()
-    y = rand()
+    x = uniform()
+    y = uniform()
     assert isclose(f2(x, y), expm1_phrase(x, y), rtol=RTOL, atol=ATOL)
 
 
@@ -703,7 +703,7 @@ def test_expm1_return_type(epyc_math_funcs_mod):  # expm1 # expm1
 def test_log1p_call(epyc_math_funcs_mod):
     log1p_call = math_funcs.log1p_call
     f1 = epyc_math_funcs_mod.log1p_call
-    x = rand()
+    x = uniform()
     assert isclose(f1(x), log1p_call(x), rtol=RTOL, atol=ATOL)
     assert isinstance(f1(x), type(log1p_call(x)))
 
@@ -714,8 +714,8 @@ def test_log1p_call(epyc_math_funcs_mod):
 def test_log1p_phrase(epyc_math_funcs_mod):
     log1p_phrase = math_funcs.log1p_phrase
     f2 = epyc_math_funcs_mod.log1p_phrase
-    x = rand()
-    y = rand()
+    x = uniform()
+    y = uniform()
     assert isclose(f2(x, y), log1p_phrase(x, y), rtol=RTOL, atol=ATOL)
 
 
