@@ -239,7 +239,7 @@ def pop_complex():
     return el1, el2, el3
 
 
-def union_int():
+def set_union_int():
     a = {1, 2, 3, 4}
     b = {5, 6, 7, 2}
     c = a.union(b)
@@ -285,14 +285,14 @@ def temporary_set_union_2():
     return d
 
 
-def union_list():
+def set_union_list():
     a = {1.2, 2.3}
     b = [1.2, 5.0]
     d = a.union(b)
     return len(d), d.pop(), d.pop(), d.pop()
 
 
-def union_tuple():
+def set_union_tuple():
     a = {True}
     b = (False,)
     d = a.union(b)
@@ -313,7 +313,7 @@ def set_union_augoperator():
     return len(a), a.pop(), a.pop(), a.pop(), a.pop(), a.pop(), a.pop(), a.pop()
 
 
-def intersection_int():
+def set_intersection_int():
     a = {1, 2, 3}
     b = {2, 3, 4}
     c = a.intersection(b)
@@ -395,7 +395,7 @@ def set_ptr():
     return len(a), len(b)
 
 
-def set_sum_int():
+def set_iter_sum():
     a = {1, 2, 3, 4, 5, 6, 7, 8, 9, 12}
     sum_a = 0
     for ai in a:
@@ -418,7 +418,7 @@ def set_iter_prod():
 T_set_arg = TypeVar("T_set_arg", int, float, complex)
 
 
-def set_arg(arg: Final[set[T_set_arg]], my_sum: T_set_arg):
+def set_const_arg(arg: Final[set[T_set_arg]], my_sum: T_set_arg):
     for ai in arg:
         my_sum += ai
     return my_sum
@@ -439,7 +439,7 @@ def set_is_disjoint(a: set[int], b: set[int]):
     return a.isdisjoint(b)
 
 
-def difference_int():
+def set_difference_int():
     a = {1, 2, 3}
     b = {2, 3, 4}
     c = a.difference(b)

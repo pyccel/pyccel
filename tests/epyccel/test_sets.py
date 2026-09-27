@@ -331,8 +331,8 @@ def test_pop_complex(epyc_sets_mod):
 
 
 def test_set_union_int(epyc_sets_mod):
-    union_int = sets.union_int
-    epyccel_func = epyc_sets_mod.union_int
+    union_int = sets.set_union_int
+    epyccel_func = epyc_sets_mod.set_union_int
     pyccel_result = epyccel_func()
     python_result = union_int()
     assert python_result == pyccel_result
@@ -401,8 +401,8 @@ def test_temporary_set_union_2(epyc_sets_mod):
 
 
 def test_set_union_list(epyc_sets_mod):
-    union_list = sets.union_list
-    epyccel_func = epyc_sets_mod.union_list
+    union_list = sets.set_union_list
+    epyccel_func = epyc_sets_mod.set_union_list
     pyccel_result = epyccel_func()
     python_result = union_list()
     assert python_result[0] == pyccel_result[0]
@@ -410,8 +410,8 @@ def test_set_union_list(epyc_sets_mod):
 
 
 def test_set_union_tuple(epyc_sets_mod):
-    union_tuple = sets.union_tuple
-    epyccel_func = epyc_sets_mod.union_tuple
+    union_tuple = sets.set_union_tuple
+    epyccel_func = epyc_sets_mod.set_union_tuple
     pyccel_result = epyccel_func()
     python_result = union_tuple()
     assert python_result[0] == pyccel_result[0]
@@ -437,7 +437,7 @@ def test_set_union_augoperator(epyc_sets_mod):
 
 
 def test_set_intersection_int(epyc_sets_mod):
-    intersection_int = sets.intersection_int
+    intersection_int = sets.set_intersection_int
     epyccel_func = epyc_sets_mod.intersection_int
     pyccel_result = epyccel_func()
     python_result = intersection_int()
@@ -540,9 +540,9 @@ def test_set_ptr(epyc_sets_mod):
     assert python_result == pyccel_result
 
 
-def test_set_iter(epyc_sets_mod):
-    set_sum_int = sets.set_sum_int
-    epyccel_func = epyc_sets_mod.set_sum_int
+def test_set_iter_sum(epyc_sets_mod):
+    set_sum_int = sets.set_iter_sum
+    epyccel_func = epyc_sets_mod.set_iter_sum
     pyccel_result = epyccel_func()
     python_result = set_sum_int()
     assert python_result == pyccel_result
@@ -559,15 +559,15 @@ def test_set_iter_prod(epyc_sets_mod):
 
 
 def test_set_const_arg(epyc_sets_mod):
-    set_arg = sets.set_arg
-    epyccel_func = epyc_sets_mod.set_arg
+    set_const_arg = sets.set_const_arg
+    epyccel_func = epyc_sets_mod.set_const_arg
     int_arg = {1, 2, 3, 4, 5, 6, 7}
     float_arg = {1.5, 2.5, 3.5, 4.5, 6.7}
     complex_arg = {1 + 0j, 4j, 2.5 + 2j}
     for arg in (int_arg, float_arg, complex_arg):
         start = type(next(iter(arg)))(0)
         pyccel_result = epyccel_func(arg, start)
-        python_result = set_arg(arg, start)
+        python_result = set_const_arg(arg, start)
         assert python_result == pyccel_result
         assert isinstance(pyccel_result, type(python_result))
 
@@ -622,8 +622,8 @@ def test_set_is_disjoint(epyc_sets_mod):
 
 
 def test_set_difference_int(epyc_sets_mod):
-    difference_int = sets.difference_int
-    epyccel_func = epyc_sets_mod.difference_int
+    difference_int = sets.set_difference_int
+    epyccel_func = epyc_sets_mod.set_difference_int
     pyccel_result = epyccel_func()
     python_result = difference_int()
     assert python_result[0] == pyccel_result[0]
