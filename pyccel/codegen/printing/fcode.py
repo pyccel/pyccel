@@ -1425,7 +1425,8 @@ class FCodePrinter(CodePrinter):
     def _print_PythonTuple(self, expr):
         shape = tuple(reversed(get_shape_of_multi_level_container(expr)))
         elements = ", ".join(self._print(e) for e in expr)
-        if len(shape) > 1:
+        # None may appear in shape if elements are not of fixed size (e.g. strings)
+        if len(shape) > 1 and None not in shape:
             shape = ", ".join(self._print(i) for i in shape)
             return "reshape([" + elements + "], [" + shape + "])"
         if elements:

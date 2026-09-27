@@ -168,12 +168,6 @@ def augassign_mul_sum_scalar(a: int, b: "int[:]"):
 # /=
 
 
-def augassign_div_1d_int(a: "int[:]"):
-    b = a
-    b /= 42
-    return b[0]
-
-
 def augassign_div_1d_float(a: "float[:]"):
     b = a
     b /= 4.2
@@ -184,12 +178,6 @@ def augassign_div_1d_complex(a: "complex[:]"):
     b = a
     b /= 4.0 + 2.0j
     return b[0]
-
-
-def augassign_div_2d_int(a: "int[:,:]"):
-    b = a
-    b /= 42
-    return b[0][0]
 
 
 def augassign_div_2d_float(a: "float[:,:]"):

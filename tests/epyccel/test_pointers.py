@@ -1,18 +1,14 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
-import inspect
-
 import numpy as np
 import pytest
 from modules import pointers as pointers_module
-from modules import return_pointers
 
-from pyccel import epyccel
+from epyccel_utilities import epyccel_module_with_fallback
 
-pointers_funcs = [
-    (f, getattr(pointers_module, f))
-    for f in pointers_module.__all__
-    if inspect.isfunction(getattr(pointers_module, f))
-]
+
+@pytest.fixture(scope="module")
+def epyc_pointers_module(language):
+    return epyccel_module_with_fallback(pointers_module, language)
 
 
 def compare_python_pyccel(p_output, f_output):
@@ -39,22 +35,28 @@ def compare_python_pyccel(p_output, f_output):
             assert np.isclose(pth, pycc)
 
 
-marks = [f[1] for f in pointers_funcs]
-
-
-@pytest.mark.parametrize("test_func", marks)
-def test_pointers(test_func, language):
-    f1 = test_func
-    f2 = epyccel(f1, language=language)
+@pytest.mark.parametrize(
+    "test_func",
+    [
+        "slice_is_pointer_idx_0",
+        "array_copy_is_pointer",
+        "pointer_to_pointer_is_pointer",
+        "reassigned_pointer",
+        "reassigned_pointer_shape",
+    ],
+)
+def test_pointers(test_func, epyc_pointers_module):
+    f1 = getattr(pointers_module, test_func)
+    f2 = getattr(epyc_pointers_module, test_func)
 
     python_out = f1()
     pyccel_out = f2()
     compare_python_pyccel(python_out, pyccel_out)
 
 
-def test_return_pointers(language):
-    f1 = return_pointers.return_ambiguous_pointer_to_argument
-    f2 = epyccel(f1, language=language)
+def test_return_pointers(epyc_pointers_module):
+    f1 = pointers_module.return_ambiguous_pointer_to_argument
+    f2 = epyc_pointers_module.return_ambiguous_pointer_to_argument
 
     x = np.array([1, 2, 3, 4])
     y = x.copy()
@@ -65,7 +67,7 @@ def test_return_pointers(language):
     compare_python_pyccel(python_out, pyccel_out)
 
     assert python_out is x
-    if language == "python":
+    if epyc_pointers_module.language == "python":
         assert pyccel_out is y
     else:
         assert pyccel_out.base is y

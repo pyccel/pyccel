@@ -6,26 +6,6 @@ from pyccel.errors.errors import PyccelError
 
 
 # ==============================================================================
-class epyccel_test:
-    """
-    Class which stores a pyccelized function
-
-    This avoids the need to pyccelize the object multiple times
-    while still providing a clean interface for the tests
-    through the compare_epyccel function
-    """
-
-    def __init__(self, f, lang="fortran"):
-        self._f = f
-        self._f2 = epyccel(f, language=lang)
-
-    def compare_epyccel(self, *args):
-        out1 = self._f(*args)
-        out2 = self._f2(*args)
-        assert np.equal(out1, out2).all()
-
-
-# ==============================================================================
 class LazyPerFunctionEpyccel:
     """
     Fallback proxy used when a whole-module `epyccel()` translation fails.
@@ -70,18 +50,17 @@ def epyccel_module_with_fallback(pymod, language, **kwargs):
     """
     try:
         mod = epyccel(pymod, language=language, **kwargs)
-    except (PyccelError, ImportError):
+    except (PyccelError, ImportError, RuntimeError):
         return LazyPerFunctionEpyccel(pymod, language, kwargs)
     mod.language = language
     return mod
 
 
 # ==============================================================================
-def compare_epyccel(f, language, *args):
+def compare_epyccel(f, f2, *args):
     """
-    Pyccelize `f`, call both versions with `args`, and assert the outputs match.
+    Call `f` and `f2`with `args`, and assert the outputs match.
     """
-    f2 = epyccel(f, language=language)
     out1 = f(*args)
     out2 = f2(*args)
     if isinstance(out1, tuple):
