@@ -25,6 +25,7 @@ __all__ = (
     "ListRemove",
     "ListReverse",
     "ListSort",
+    "ListIndex",
 )
 
 
@@ -425,3 +426,29 @@ class ListReverse(ListMethod):
 
     def __init__(self, list_obj) -> None:
         super().__init__(list_obj)
+
+class ListIndex(ListMethod):
+    """
+    Represents the .index() method for Python lists.
+
+    >>> digits = [0, 1, 5, 8]
+    >>> print(digits.index(5))
+    2
+    """
+    __slots__ = ('_value',)
+    name = 'index'
+
+    def __int__(self, list_obj, value):
+        self._value = value
+        super().__init__(list_obj)
+
+    @property
+    def value(self):
+        return self._value
+
+    @property
+    def modified_args(self):
+        return ()
+
+
+
